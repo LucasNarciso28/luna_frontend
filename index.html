@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com Luna 💖</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: #f0e4f7; /* Lilás clarinho */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 85vh;
+            max-height: 700px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Para conter o border-radius */
+        }
+
+        h1 {
+            text-align: center;
+            color: #6a0dad; /* Roxo */
+            padding: 15px;
+            margin: 0;
+            background-color: #e6ccff; /* Lilás um pouco mais escuro */
+            border-bottom: 1px solid #d1b3e6;
+            font-size: 1.4em;
+        }
+
+        #chat-log {
+            flex-grow: 1; /* Ocupa o espaço restante */
+            overflow-y: auto; /* Habilita scroll */
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Espaço entre mensagens */
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            word-wrap: break-word; /* Quebra palavras longas */
+        }
+
+        .user-message {
+            background-color: #d1b3e6; /* Lilás mais forte */
+            color: #333;
+            align-self: flex-end; /* Alinha à direita */
+            border-bottom-right-radius: 5px; /* Estilo balão */
+        }
+
+        .ai-message {
+            background-color: #e6ccff; /* Lilás claro */
+            color: #333;
+            align-self: flex-start; /* Alinha à esquerda */
+            border-bottom-left-radius: 5px; /* Estilo balão */
+        }
+
+        .error-message {
+             background-color: #ffdddd;
+             color: #d8000c;
+             align-self: center;
+             font-style: italic;
+             width: 90%;
+             text-align: center;
+             border: 1px solid #ffbaba;
+        }
+
+
+        #input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #d1b3e6;
+            background-color: #f8f0ff;
+        }
+
+        #prompt-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 1rem;
+            resize: none; /* Impede redimensionar textarea */
+            height: 40px; /* Altura inicial */
+            line-height: 1.4;
+        }
+
+        #submit-button {
+            padding: 10px 20px;
+            background-color: #8a2be2; /* Roxo mais vibrante */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        #submit-button:hover {
+            background-color: #6a0dad;
+        }
+
+        #submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #status {
+            text-align: center;
+            padding: 5px;
+            font-size: 0.9em;
+            color: #666;
+            height: 1.2em; /* Evita pulo de layout */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="chat-container">
+        <h1>Conversando com Luna 💖</h1>
+
+        <div id="chat-log">
+            <!-- Mensagens aparecerão aqui -->
+             <div class="message ai-message">Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?</div> <!-- Mensagem inicial -->
+        </div>
+
+         <div id="status"></div>
+
+        <form id="prompt-form" style="width: 100%;"> <!-- Formulário engloba a área de input -->
+            <div id="input-area">
+                <textarea id="prompt-input" rows="1" placeholder="Digite sua mensagem..."></textarea>
+                <button id="submit-button" type="submit">Enviar</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Seleciona os elementos do DOM
+        const form = document.getElementById('prompt-form');
+        const promptInput = document.getElementById('prompt-input');
+        const submitButton = document.getElementById('submit-button');
+        const chatLog = document.getElementById('chat-log');
+        const statusDiv = document.getElementById('status');
+
+        // URL do backend
+        const backendUrl = 'http://localhost:3001/api/generate';
+
+        // Função para adicionar mensagens ao log do chat
+        function addMessageToLog(sender, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+                messageDiv.textContent = message; // Mensagens do usuário sem formatação especial
+            } else if (sender === 'ai') {
+                messageDiv.classList.add('ai-message');
+                messageDiv.textContent = message; // Mensagens da IA
+            } else { // Para erros
+                 messageDiv.classList.add('error-message');
+                 messageDiv.textContent = message;
+            }
+
+            chatLog.appendChild(messageDiv);
+            // Auto-scroll para a última mensagem
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+         // Ajustar altura do textarea
+         promptInput.addEventListener('input', () => {
+            promptInput.style.height = 'auto'; // Reseta altura
+            promptInput.style.height = (promptInput.scrollHeight) + 'px'; // Ajusta à altura do conteúdo
+         });
+
+        // Adiciona o listener para o envio do formulário
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userPrompt = promptInput.value.trim();
+
+            if (!userPrompt) return; // Não envia mensagem vazia
+
+            // Adiciona a mensagem do usuário ao log
+            addMessageToLog('user', userPrompt);
+            promptInput.value = ''; // Limpa o input
+            promptInput.style.height = '40px'; // Reseta altura do input
+            submitButton.disabled = true;
+            statusDiv.textContent = 'Luna está digitando... 💭';
+
+            try {
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userPrompt })
+                });
+
+                const data = await response.json(); // Tenta ler o JSON mesmo em erro
+
+                if (!response.ok) {
+                    // Usa a mensagem de erro do backend, se disponível
+                    const errorMsg = data.error || `Erro ${response.status}: ${response.statusText}`;
+                    throw new Error(errorMsg);
+                }
+
+                // Adiciona a resposta da IA ao log
+                addMessageToLog('ai', data.generatedText);
+
+            } catch (error) {
+                console.error('Falha ao buscar resposta:', error);
+                // Exibe a mensagem de erro no chat
+                addMessageToLog('error', `Erro: ${error.message}`);
+            } finally {
+                submitButton.disabled = false;
+                statusDiv.textContent = ''; // Limpa o status
+            }
+        });
+
+    </script>
+</body>
+
+</html>
