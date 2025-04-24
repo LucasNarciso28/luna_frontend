@@ -160,29 +160,70 @@
         const statusDiv = document.getElementById('status');
 
         // URL do backend
-        const backendUrl = 'https://luna-botnamoradeiro.onrender.com/api/generate';
+        const backendUrl = 'http://localhost:3001/api/generate';
+
+        //Carregamento do conteúdo conversado.
+        const CHAT_HISTORY_KEY = 'luna_chat_new2';
+        loadChatHistory();
+
+        // Função para carregar o histórico salvo
+    function loadChatHistory() {
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (savedHistory) {
+            try {
+                const history = JSON.parse(savedHistory);
+                history.forEach(msg => {
+                    addMessageToLog(msg.sender, msg.text, false); // false para não salvar novamente
+                });
+            } catch (e) {
+                console.error('Erro ao carregar histórico:', e);
+                localStorage.removeItem(CHAT_HISTORY_KEY);
+            }
+        } else {
+            // Mensagem inicial padrão
+            addMessageToLog('user', 'Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?', true);
+        }
+    }
+
+    // Função para salvar mensagem no histórico
+    function saveMessageToHistory(sender, text) {
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        let history = savedHistory ? JSON.parse(savedHistory) : [];
+        
+        // Adiciona nova mensagem (limita a 50 mensagens para não ocupar muito espaço)
+        history.push({ sender, text });
+        if (history.length > 50) {
+            history = history.slice(-50); // Mantém apenas as últimas 50 mensagens
+        }
+        
+        localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+    }
 
         // Função para adicionar mensagens ao log do chat
-        function addMessageToLog(sender, message) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
+        function addMessageToLog(sender, message, save = true) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
 
-            if (sender === 'user') {
-                messageDiv.classList.add('user-message');
-                messageDiv.textContent = message; // Mensagens do usuário sem formatação especial
-            } else if (sender === 'ai') {
-                messageDiv.classList.add('ai-message');
-                messageDiv.textContent = message; // Mensagens da IA
-            } else { // Para erros
-                 messageDiv.classList.add('error-message');
-                 messageDiv.textContent = message;
-            }
-
-            chatLog.appendChild(messageDiv);
-            // Auto-scroll para a última mensagem
-            chatLog.scrollTop = chatLog.scrollHeight;
+        if (sender === 'user') {
+            messageDiv.classList.add('user-message');
+            messageDiv.textContent = message;
+        } else if (sender === 'ai') {
+            sender = 'model';
+            messageDiv.classList.add('ai-message');
+            messageDiv.textContent = message;
+        } else {
+            messageDiv.classList.add('error-message');
+            messageDiv.textContent = message;
         }
 
+        chatLog.appendChild(messageDiv);
+        chatLog.scrollTop = chatLog.scrollHeight;
+
+        // Salva no histórico (exceto para erros)
+        if (save && sender !== 'error') {
+            saveMessageToHistory(sender, message);
+        }
+    }
          // Ajustar altura do textarea
          promptInput.addEventListener('input', () => {
             promptInput.style.height = 'auto'; // Reseta altura
@@ -191,45 +232,48 @@
 
         // Adiciona o listener para o envio do formulário
         form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const userPrompt = promptInput.value.trim();
+    event.preventDefault();
+    const userPrompt = promptInput.value.trim();
 
-            if (!userPrompt) return; // Não envia mensagem vazia
+    if (!userPrompt) return;
 
-            // Adiciona a mensagem do usuário ao log
-            addMessageToLog('user', userPrompt);
-            promptInput.value = ''; // Limpa o input
-            promptInput.style.height = '40px'; // Reseta altura do input
-            submitButton.disabled = true;
-            statusDiv.textContent = 'Luna está digitando... 💭';
+    addMessageToLog('user', userPrompt);
+    promptInput.value = '';
+    promptInput.style.height = '40px';
+    submitButton.disabled = true;
+    statusDiv.textContent = 'Luna está digitando... 💭';
 
-            try {
-                const response = await fetch(backendUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: userPrompt })
-                });
+    try {
+        // Obtém o histórico salvo
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        const history = savedHistory ? JSON.parse(savedHistory) : [];
 
-                const data = await response.json(); // Tenta ler o JSON mesmo em erro
-
-                if (!response.ok) {
-                    // Usa a mensagem de erro do backend, se disponível
-                    const errorMsg = data.error || `Erro ${response.status}: ${response.statusText}`;
-                    throw new Error(errorMsg);
-                }
-
-                // Adiciona a resposta da IA ao log
-                addMessageToLog('ai', data.generatedText);
-
-            } catch (error) {
-                console.error('Falha ao buscar resposta:', error);
-                // Exibe a mensagem de erro no chat
-                addMessageToLog('error', `Erro: ${error.message}`);
-            } finally {
-                submitButton.disabled = false;
-                statusDiv.textContent = ''; // Limpa o status
-            }
+        const response = await fetch(backendUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                prompt: userPrompt,
+                history: history // Envia o histórico para o backend
+            })
         });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            const errorMsg = data.error || `Erro ${response.status}: ${response.statusText}`;
+            throw new Error(errorMsg);
+        }
+
+        addMessageToLog('ai', data.generatedText);
+
+    } catch (error) {
+        console.error('Falha ao buscar resposta:', error);
+        addMessageToLog('error', `Erro: ${error.message}`);
+    } finally {
+        submitButton.disabled = false;
+        statusDiv.textContent = '';
+    }
+});
 
     </script>
 </body>
