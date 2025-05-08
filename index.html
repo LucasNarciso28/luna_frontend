@@ -1,149 +1,42 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat com Luna 💖</title>
-
     <style>
-        body {
-            font-family: sans-serif;
-            line-height: 1.5;
-            margin: 0;
-            padding: 0;
-            background-color: #f0e4f7; /* Lilás clarinho */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        #chat-container {
-            width: 90%;
-            max-width: 600px;
-            height: 85vh;
-            max-height: 700px;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Para conter o border-radius */
-        }
-
-        h1 {
-            text-align: center;
-            color: #6a0dad; /* Roxo */
-            padding: 15px;
-            margin: 0;
-            background-color: #e6ccff; /* Lilás um pouco mais escuro */
-            border-bottom: 1px solid #d1b3e6;
-            font-size: 1.4em;
-        }
-
-        #chat-log {
-            flex-grow: 1; /* Ocupa o espaço restante */
-            overflow-y: auto; /* Habilita scroll */
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px; /* Espaço entre mensagens */
-        }
-
-        .message {
-            padding: 10px 15px;
-            border-radius: 18px;
-            max-width: 75%;
-            word-wrap: break-word; /* Quebra palavras longas */
-        }
-
-        .user-message {
-            background-color: #d1b3e6; /* Lilás mais forte */
-            color: #333;
-            align-self: flex-end; /* Alinha à direita */
-            border-bottom-right-radius: 5px; /* Estilo balão */
-        }
-
-        .ai-message {
-            background-color: #e6ccff; /* Lilás claro */
-            color: #333;
-            align-self: flex-start; /* Alinha à esquerda */
-            border-bottom-left-radius: 5px; /* Estilo balão */
-        }
-
-        .error-message {
-             background-color: #ffdddd;
-             color: #d8000c;
-             align-self: center;
-             font-style: italic;
-             width: 90%;
-             text-align: center;
-             border: 1px solid #ffbaba;
-        }
-
-
-        #input-area {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #d1b3e6;
-            background-color: #f8f0ff;
-        }
-
-        #prompt-input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            margin-right: 10px;
-            font-size: 1rem;
-            resize: none; /* Impede redimensionar textarea */
-            height: 40px; /* Altura inicial */
-            line-height: 1.4;
-        }
-
-        #submit-button {
-            padding: 10px 20px;
-            background-color: #8a2be2; /* Roxo mais vibrante */
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s ease;
-        }
-
-        #submit-button:hover {
-            background-color: #6a0dad;
-        }
-
-        #submit-button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        #status {
-            text-align: center;
-            padding: 5px;
-            font-size: 0.9em;
-            color: #666;
-            height: 1.2em; /* Evita pulo de layout */
-        }
+        /* Seus estilos CSS permanecem os mesmos da versão anterior */
+         body { font-family: sans-serif; line-height: 1.5; margin: 0; padding: 0; background-color: #f0e4f7; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+         #chat-container { width: 90%; max-width: 600px; height: 85vh; max-height: 700px; background: #fff; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; overflow: hidden; }
+         h1 { text-align: center; color: #6a0dad; padding: 15px; margin: 0; background-color: #e6ccff; border-bottom: 1px solid #d1b3e6; font-size: 1.4em; }
+         #chat-log { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+         .message { padding: 10px 15px; border-radius: 18px; max-width: 100%; word-wrap: break-word; }
+         .user-message { background-color: #d1b3e6; color: #333; border-bottom-right-radius: 5px; }
+         .ai-message { background-color: #e6ccff; color: #333; border-bottom-left-radius: 5px; }
+         .error-message { background-color: #ffdddd; color: #d8000c; font-style: italic; text-align: center; border: 1px solid #ffbaba; }
+         #input-area { display: flex; padding: 10px; border-top: 1px solid #d1b3e6; background-color: #f8f0ff; }
+         #prompt-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; margin-right: 10px; font-size: 1rem; resize: none; height: 40px; line-height: 1.4; }
+         #submit-button { padding: 10px 20px; background-color: #8a2be2; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 1rem; transition: background-color 0.2s ease; }
+         #submit-button:hover { background-color: #6a0dad; }
+         #submit-button:disabled { background-color: #cccccc; cursor: not-allowed; }
+         #status { text-align: center; padding: 5px; font-size: 0.9em; color: #666; height: 1.2em; }
+         .message-container { display: flex; flex-direction: column; margin-bottom: 5px; }
+         .user-message-container { align-self: flex-end; max-width: 75%; }
+         .ai-message-container { align-self: flex-start; max-width: 75%; }
+         .error-message-container { align-self: center; width: 90%; }
+         .message-time { font-size: 0.7em; color: #888; margin-top: 4px; }
+         .user-message-container .message-time { color: #a67fcf; align-self: flex-end; }
+         .ai-message-container .message-time { color: #c299e6; align-self: flex-start; }
+         .error-message-container .message-time { display: none; }
+         .initial-date-time { font-size: 0.8em; color: #777; text-align: center; margin: 10px 0; font-style: italic; }
     </style>
 </head>
-
 <body>
     <div id="chat-container">
         <h1>Conversando com Luna 💖</h1>
-
-        <div id="chat-log">
-            <!-- Mensagens aparecerão aqui -->
-             <div class="message ai-message">Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?</div> <!-- Mensagem inicial -->
-        </div>
-
-         <div id="status"></div>
-
-        <form id="prompt-form" style="width: 100%;"> <!-- Formulário engloba a área de input -->
+        <div id="chat-log"></div>
+        <div id="status"></div>
+        <form id="prompt-form" style="width: 100%;">
             <div id="input-area">
                 <textarea id="prompt-input" rows="1" placeholder="Digite sua mensagem..."></textarea>
                 <button id="submit-button" type="submit">Enviar</button>
@@ -152,130 +45,180 @@
     </div>
 
     <script>
-        // Seleciona os elementos do DOM
         const form = document.getElementById('prompt-form');
         const promptInput = document.getElementById('prompt-input');
         const submitButton = document.getElementById('submit-button');
         const chatLog = document.getElementById('chat-log');
         const statusDiv = document.getElementById('status');
 
-        // URL do backend
         const backendUrl = 'http://localhost:3001/api/generate';
+        const dateTimeApiUrl = 'http://localhost:3001/api/datetime';
+        const CHAT_HISTORY_KEY = 'luna_chat_history_'; // Mantido v3
 
-        //Carregamento do conteúdo conversado.
-        const CHAT_HISTORY_KEY = 'luna_chat_new2';
-        loadChatHistory();
+        console.log("--- [FRONTEND] Script iniciado ---");
 
-        // Função para carregar o histórico salvo
-    function loadChatHistory() {
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        if (savedHistory) {
+        function formatTime(date = new Date()) {
+            return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+
+        async function fetchAndDisplayInitialDateTime() {
+            console.log("[FRONTEND] fetchAndDisplayInitialDateTime: Buscando data/hora inicial...");
+            try {
+                const response = await fetch(dateTimeApiUrl);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error("[FRONTEND] fetchAndDisplayInitialDateTime: Erro na resposta da API de data/hora", response.status, errorData);
+                    throw new Error(errorData.error || `Erro ${response.status} ao buscar data/hora.`);
+                }
+                const data = await response.json();
+                const dateTimeMessage = `Hoje é ${data.datetime} 💕`;
+                const dateTimeDiv = document.createElement('div');
+                dateTimeDiv.classList.add('initial-date-time');
+                dateTimeDiv.textContent = dateTimeMessage;
+                chatLog.appendChild(dateTimeDiv);
+                console.log("[FRONTEND] fetchAndDisplayInitialDateTime: Data/hora exibida:", dateTimeMessage);
+            } catch (error) {
+                console.error("[FRONTEND] fetchAndDisplayInitialDateTime: Falha ao buscar ou exibir data/hora:", error.message);
+                const errorDiv = document.createElement('div');
+                errorDiv.classList.add('initial-date-time');
+                errorDiv.style.color = 'red';
+                errorDiv.textContent = "Não consegui ver a data e hora agora, amor... 😢";
+                chatLog.appendChild(errorDiv);
+            }
+        }
+
+        function addMessageToLog(sender, messageText, saveToHistory = true) {
+            // console.log(`[FRONTEND] addMessageToLog: Sender: <span class="math-inline">\{sender\}, Message\: "</span>{messageText.substring(0,50)}...", Save: ${saveToHistory}`);
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.textContent = messageText;
+            const timeDiv = document.createElement('div');
+            timeDiv.classList.add('message-time');
+            timeDiv.textContent = formatTime();
+
+            if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+                messageContainer.classList.add('user-message-container');
+            } else if (sender === 'ai') {
+                messageDiv.classList.add('ai-message');
+                messageContainer.classList.add('ai-message-container');
+            } else {
+                messageDiv.classList.add('error-message');
+                messageContainer.classList.add('error-message-container');
+                timeDiv.style.display = 'none';
+            }
+            messageContainer.appendChild(messageDiv);
+            messageContainer.appendChild(timeDiv);
+            chatLog.appendChild(messageContainer);
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+            if (saveToHistory && sender !== 'error') {
+                saveMessageToLocalStorage(sender, messageText);
+            }
+        }
+
+        function saveMessageToLocalStorage(sender, text) {
+            // console.log(`[FRONTEND] saveMessageToLocalStorage: Salvando Sender: <span class="math-inline">\{sender\}, Text\: "</span>{text.substring(0,50)}..."`);
+            const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+            let history = savedHistory ? JSON.parse(savedHistory) : [];
+            history.push({ sender, text, timestamp: new Date().toISOString() });
+            if (history.length > 50) history = history.slice(-50);
+            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+        }
+
+        async function loadChatHistory() {
+            console.log("[FRONTEND] loadChatHistory: Iniciando carregamento do histórico...");
+            chatLog.innerHTML = '';
+            await fetchAndDisplayInitialDateTime();
+            const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+            if (!savedHistory) {
+                console.log("[FRONTEND] loadChatHistory: Nenhum histórico salvo encontrado. Exibindo msg padrão.");
+                addMessageToLog('ai', 'Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?', false);
+                return;
+            }
             try {
                 const history = JSON.parse(savedHistory);
-                history.forEach(msg => {
-                    addMessageToLog(msg.sender, msg.text, false); // false para não salvar novamente
-                });
+                console.log(`[FRONTEND] loadChatHistory: ${history.length} mensagens carregadas do histórico.`);
+                history.forEach(msg => addMessageToLog(msg.sender, msg.text, false));
             } catch (e) {
-                console.error('Erro ao carregar histórico:', e);
+                console.error('[FRONTEND] loadChatHistory: Erro ao carregar histórico:', e);
                 localStorage.removeItem(CHAT_HISTORY_KEY);
+                addMessageToLog('ai', 'Oi, meu amor! 🥰 Tivemos um probleminha carregando nosso papo anterior, mas já estou aqui!', false);
             }
-        } else {
-            // Mensagem inicial padrão
-            addMessageToLog('user', 'Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?', true);
-        }
-    }
-
-    // Função para salvar mensagem no histórico
-    function saveMessageToHistory(sender, text) {
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        let history = savedHistory ? JSON.parse(savedHistory) : [];
-        
-        // Adiciona nova mensagem (limita a 50 mensagens para não ocupar muito espaço)
-        history.push({ sender, text });
-        if (history.length > 50) {
-            history = history.slice(-50); // Mantém apenas as últimas 50 mensagens
-        }
-        
-        localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
-    }
-
-        // Função para adicionar mensagens ao log do chat
-        function addMessageToLog(sender, message, save = true) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-
-        if (sender === 'user') {
-            messageDiv.classList.add('user-message');
-            messageDiv.textContent = message;
-        } else if (sender === 'ai') {
-            sender = 'model';
-            messageDiv.classList.add('ai-message');
-            messageDiv.textContent = message;
-        } else {
-            messageDiv.classList.add('error-message');
-            messageDiv.textContent = message;
         }
 
-        chatLog.appendChild(messageDiv);
-        chatLog.scrollTop = chatLog.scrollHeight;
-
-        // Salva no histórico (exceto para erros)
-        if (save && sender !== 'error') {
-            saveMessageToHistory(sender, message);
-        }
-    }
-         // Ajustar altura do textarea
-         promptInput.addEventListener('input', () => {
-            promptInput.style.height = 'auto'; // Reseta altura
-            promptInput.style.height = (promptInput.scrollHeight) + 'px'; // Ajusta à altura do conteúdo
-         });
-
-        // Adiciona o listener para o envio do formulário
-        form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const userPrompt = promptInput.value.trim();
-
-    if (!userPrompt) return;
-
-    addMessageToLog('user', userPrompt);
-    promptInput.value = '';
-    promptInput.style.height = '40px';
-    submitButton.disabled = true;
-    statusDiv.textContent = 'Luna está digitando... 💭';
-
-    try {
-        // Obtém o histórico salvo
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        const history = savedHistory ? JSON.parse(savedHistory) : [];
-
-        const response = await fetch(backendUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                prompt: userPrompt,
-                history: history // Envia o histórico para o backend
-            })
+        promptInput.addEventListener('input', () => {
+            promptInput.style.height = 'auto';
+            promptInput.style.height = (promptInput.scrollHeight) + 'px';
         });
 
-        const data = await response.json();
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userPrompt = promptInput.value.trim();
+            console.log(`[FRONTEND] Evento 'submit': Prompt do usuário: "${userPrompt}"`);
 
-        if (!response.ok) {
-            const errorMsg = data.error || `Erro ${response.status}: ${response.statusText}`;
-            throw new Error(errorMsg);
-        }
+            if (!userPrompt) {
+                 console.log("[FRONTEND] Evento 'submit': Prompt vazio, não enviando.");
+                 return;
+            }
 
-        addMessageToLog('ai', data.generatedText);
+            addMessageToLog('user', userPrompt);
 
-    } catch (error) {
-        console.error('Falha ao buscar resposta:', error);
-        addMessageToLog('error', `Erro: ${error.message}`);
-    } finally {
-        submitButton.disabled = false;
-        statusDiv.textContent = '';
-    }
-});
+            const currentHistoryForAPI = (() => {
+                const saved = localStorage.getItem(CHAT_HISTORY_KEY);
+                const historyArray = saved ? JSON.parse(saved) : [];
+                // console.log("[FRONTEND] Evento 'submit': Histórico do LocalStorage ANTES de enviar:", JSON.stringify(historyArray.map(m=>({sender: m.sender, text: m.text.substring(0,20)+"..."})), null, 2));
+                return historyArray.map(m => ({ sender: m.sender, text: m.text }));
+            })();
+             // Descomente para ver o histórico que será enviado à API
+            // console.log("[FRONTEND] Evento 'submit': Histórico formatado para API (enviado):", JSON.stringify(currentHistoryForAPI.map(m=>({sender: m.sender, text: m.text.substring(0,20)+"..."})), null, 2));
 
+
+            promptInput.value = '';
+            promptInput.style.height = '40px';
+            submitButton.disabled = true;
+            statusDiv.textContent = 'Luna está digitando... 💭';
+
+            try {
+                console.log("[FRONTEND] Evento 'submit': Enviando requisição para:", backendUrl);
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: userPrompt,
+                        history: currentHistoryForAPI
+                    })
+                });
+
+                console.log("[FRONTEND] Evento 'submit': Resposta do servidor (status):", response.status, response.statusText);
+                const data = await response.json();
+                // console.log("[FRONTEND] Evento 'submit': Dados recebidos do servidor (JSON):", JSON.stringify(data, null, 2));
+
+                if (!response.ok) {
+                    const errorMsg = data.error || `Erro ${response.status} do servidor.`;
+                    console.error(`[FRONTEND] Evento 'submit': Erro da API: ${errorMsg}`, data.details || '');
+                    throw new Error(errorMsg); // Isso será pego pelo catch abaixo
+                }
+                addMessageToLog('ai', data.generatedText);
+                console.log(`[FRONTEND] Evento 'submit': Resposta da IA adicionada ao log: "${data.generatedText.substring(0,50)}..."`);
+
+            } catch (error) {
+                // O error.message aqui já deve ser a mensagem de erro tratada (do throw new Error ou do fetch)
+                console.error('[FRONTEND] Evento \'submit\': Falha na requisição ou processamento:', error.message);
+                addMessageToLog('error', `${error.message}`, false);
+            } finally {
+                submitButton.disabled = false;
+                statusDiv.textContent = '';
+                promptInput.focus();
+                console.log("[FRONTEND] Evento 'submit': Finalizado.");
+            }
+        });
+
+        console.log("[FRONTEND] Adicionando event listener e carregando histórico inicial...");
+        loadChatHistory();
+        console.log("--- [FRONTEND] Script finalizado (setup inicial) ---");
     </script>
 </body>
-
 </html>
