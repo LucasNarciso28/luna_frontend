@@ -1,36 +1,250 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat com Luna 💖</title>
     <style>
         /* Seus estilos CSS permanecem os mesmos da versão anterior */
-         body { font-family: sans-serif; line-height: 1.5; margin: 0; padding: 0; background-color: #f0e4f7; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-         #chat-container { width: 90%; max-width: 600px; height: 85vh; max-height: 700px; background: #fff; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; overflow: hidden; }
-         h1 { text-align: center; color: #6a0dad; padding: 15px; margin: 0; background-color: #e6ccff; border-bottom: 1px solid #d1b3e6; font-size: 1.4em; }
-         #chat-log { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-         .message { padding: 10px 15px; border-radius: 18px; max-width: 100%; word-wrap: break-word; }
-         .user-message { background-color: #d1b3e6; color: #333; border-bottom-right-radius: 5px; }
-         .ai-message { background-color: #e6ccff; color: #333; border-bottom-left-radius: 5px; }
-         .error-message { background-color: #ffdddd; color: #d8000c; font-style: italic; text-align: center; border: 1px solid #ffbaba; }
-         #input-area { display: flex; padding: 10px; border-top: 1px solid #d1b3e6; background-color: #f8f0ff; }
-         #prompt-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; margin-right: 10px; font-size: 1rem; resize: none; height: 40px; line-height: 1.4; }
-         #submit-button { padding: 10px 20px; background-color: #8a2be2; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 1rem; transition: background-color 0.2s ease; }
-         #submit-button:hover { background-color: #6a0dad; }
-         #submit-button:disabled { background-color: #cccccc; cursor: not-allowed; }
-         #status { text-align: center; padding: 5px; font-size: 0.9em; color: #666; height: 1.2em; }
-         .message-container { display: flex; flex-direction: column; margin-bottom: 5px; }
-         .user-message-container { align-self: flex-end; max-width: 75%; }
-         .ai-message-container { align-self: flex-start; max-width: 75%; }
-         .error-message-container { align-self: center; width: 90%; }
-         .message-time { font-size: 0.7em; color: #888; margin-top: 4px; }
-         .user-message-container .message-time { color: #a67fcf; align-self: flex-end; }
-         .ai-message-container .message-time { color: #c299e6; align-self: flex-start; }
-         .error-message-container .message-time { display: none; }
-         .initial-date-time { font-size: 0.8em; color: #777; text-align: center; margin: 10px 0; font-style: italic; }
+        body {
+            font-family: sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: #f0e4f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 85vh;
+            max-height: 700px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            color: #6a0dad;
+            padding: 15px;
+            margin: 0;
+            background-color: #e6ccff;
+            border-bottom: 1px solid #d1b3e6;
+            font-size: 1.4em;
+        }
+
+        #chat-log {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #d1b3e6;
+            color: #333;
+            border-bottom-right-radius: 5px;
+        }
+
+        .ai-message {
+            background-color: #e6ccff;
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        .error-message {
+            background-color: #ffdddd;
+            color: #d8000c;
+            font-style: italic;
+            text-align: center;
+            border: 1px solid #ffbaba;
+        }
+
+        #input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #d1b3e6;
+            background-color: #f8f0ff;
+        }
+
+        #prompt-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 1rem;
+            resize: none;
+            height: 40px;
+            line-height: 1.4;
+        }
+
+        #submit-button {
+            padding: 10px 20px;
+            background-color: #8a2be2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        #submit-button:hover {
+            background-color: #6a0dad;
+        }
+
+        #submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #status {
+            text-align: center;
+            padding: 5px;
+            font-size: 0.9em;
+            color: #666;
+            height: 1.2em;
+        }
+
+        .message-container {
+            /* Estilo base para o container da mensagem + tempo */
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            /* Mensagens não ocupam a largura toda */
+            margin-bottom: 10px;
+            /* Espaçamento entre mensagens */
+        }
+
+        .user-message-container {
+            align-self: flex-end;
+            /* Alinha à direita */
+        }
+
+        .ai-message-container {
+            align-self: flex-start;
+            /* Alinha à esquerda */
+        }
+
+        .error-message-container {
+            align-self: center;
+            /* Erros centralizados */
+            width: 90%;
+            /* Erros podem ser mais largos */
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            /* max-width: 100%; */
+            /* Removido, pois o container já limita */
+            line-height: 1.4;
+            /* Adicionado para melhor legibilidade */
+        }
+
+        .user-message {
+            background-color: #d1b3e6;
+            /* Lilás mais escuro para usuário */
+            color: #333;
+            border-bottom-right-radius: 5px;
+            /* "Rabicho" da mensagem */
+        }
+
+        .ai-message {
+            background-color: #e6ccff;
+            /* Lilás mais claro para IA */
+            color: #333;
+            border-bottom-left-radius: 5px;
+            /* "Rabicho" da mensagem */
+        }
+
+        .error-message {
+            background-color: #ffdddd;
+            color: #d8000c;
+            font-style: italic;
+            text-align: center;
+            border: 1px solid #ffbaba;
+            border-radius: 8px;
+            /* Arredondamento geral para erros */
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            color: #888;
+            margin-top: 4px;
+            /* align-self: flex-end; */
+            /* Removido, o container pai cuida do alinhamento geral */
+        }
+
+        /* Ajuste para que o tempo fique alinhado corretamente dentro do seu container */
+        .user-message-container .message-time {
+            align-self: flex-end;
+            color: #a67fcf;
+            /* Cor para o tempo do usuário */
+        }
+
+        .ai-message-container .message-time {
+            align-self: flex-end;
+            /* Mantém à direita do balão da IA também, ou flex-start se preferir */
+            color: #c299e6;
+            /* Cor para o tempo da IA */
+        }
+
+        .error-message-container .message-time {
+            display: none;
+            /* Geralmente não mostramos tempo para erros */
+        }
+
+
+        .message-time {
+            font-size: 0.7em;
+            color: #888;
+            margin-top: 4px;
+            align-self: flex-end;
+        }
+
+        .user-message .message-time {
+            color: #a67fcf;
+        }
+
+        .ai-message .message-time {
+            color: #c299e6;
+        }
+
+        .error-message-container .message-time {
+            display: none;
+        }
+
+        .initial-date-time {
+            font-size: 0.8em;
+            color: #777;
+            text-align: center;
+            margin: 10px 0;
+            font-style: italic;
+        }
     </style>
 </head>
+
 <body>
     <div id="chat-container">
         <h1>Conversando com Luna 💖</h1>
@@ -53,7 +267,7 @@
 
         const backendUrl = 'http://localhost:3001/api/generate';
         const dateTimeApiUrl = 'http://localhost:3001/api/datetime';
-        const CHAT_HISTORY_KEY = 'luna_chat_history_'; // Mantido v3
+        const CHAT_HISTORY_KEY = 'luna_chat_history_v002'; // Mantido v3
 
         console.log("--- [FRONTEND] Script iniciado ---");
 
@@ -87,16 +301,14 @@
             }
         }
 
-        function addMessageToLog(sender, messageText, saveToHistory = true) {
-            // console.log(`[FRONTEND] addMessageToLog: Sender: <span class="math-inline">\{sender\}, Message\: "</span>{messageText.substring(0,50)}...", Save: ${saveToHistory}`);
+        // Função para adicionar mensagens com timestamp
+        function addMessageToLog(sender, message, saveToHistory = true) { // Adicionado saveToHistory
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message'); // Classe base
+
+            // Container para alinhar a mensagem (user à direita, ai à esquerda)
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            messageDiv.textContent = messageText;
-            const timeDiv = document.createElement('div');
-            timeDiv.classList.add('message-time');
-            timeDiv.textContent = formatTime();
 
             if (sender === 'user') {
                 messageDiv.classList.add('user-message');
@@ -104,47 +316,67 @@
             } else if (sender === 'ai') {
                 messageDiv.classList.add('ai-message');
                 messageContainer.classList.add('ai-message-container');
-            } else {
+            } else if (sender === 'error') {
                 messageDiv.classList.add('error-message');
                 messageContainer.classList.add('error-message-container');
-                timeDiv.style.display = 'none';
             }
+
+            messageDiv.textContent = message;
+
+            const timeDiv = document.createElement('div');
+            timeDiv.classList.add('message-time');
+            timeDiv.textContent = formatTime(); // Usando sua função formatTime
+
+            // Adiciona a mensagem e o tempo ao container específico
             messageContainer.appendChild(messageDiv);
-            messageContainer.appendChild(timeDiv);
+            if (sender !== 'error') { // Erros não precisam de timestamp individual visível assim
+                messageContainer.appendChild(timeDiv);
+            }
+
             chatLog.appendChild(messageContainer);
             chatLog.scrollTop = chatLog.scrollHeight;
 
-            if (saveToHistory && sender !== 'error') {
-                saveMessageToLocalStorage(sender, messageText);
+            // Salvar no localStorage se saveToHistory for true
+            if (saveToHistory && (sender === 'user' || sender === 'ai')) {
+                saveMessageToLocalStorage(sender, message);
             }
         }
 
+
         function saveMessageToLocalStorage(sender, text) {
-            // console.log(`[FRONTEND] saveMessageToLocalStorage: Salvando Sender: <span class="math-inline">\{sender\}, Text\: "</span>{text.substring(0,50)}..."`);
+            console.log(`[FRONTEND] saveMessageToLocalStorage: Salvando Sender: ${sender}, Text: "${text.substring(0, 50)}..."`);
             const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             let history = savedHistory ? JSON.parse(savedHistory) : [];
             history.push({ sender, text, timestamp: new Date().toISOString() });
-            if (history.length > 50) history = history.slice(-50);
+            if (history.length > 50) { // Limite de histórico
+                history = history.slice(-50);
+                console.log("[FRONTEND] Histórico antigo removido para manter o limite de 50 mensagens.");
+            }
             localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
         }
 
         async function loadChatHistory() {
             console.log("[FRONTEND] loadChatHistory: Iniciando carregamento do histórico...");
-            chatLog.innerHTML = '';
-            await fetchAndDisplayInitialDateTime();
+            chatLog.innerHTML = ''; // Limpa o log visual
+            await fetchAndDisplayInitialDateTime(); // Exibe a data/hora inicial
+
             const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             if (!savedHistory) {
                 console.log("[FRONTEND] loadChatHistory: Nenhum histórico salvo encontrado. Exibindo msg padrão.");
+                // Não salvar a mensagem inicial no histórico, ela é apenas de boas-vindas
                 addMessageToLog('ai', 'Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?', false);
                 return;
             }
             try {
                 const history = JSON.parse(savedHistory);
                 console.log(`[FRONTEND] loadChatHistory: ${history.length} mensagens carregadas do histórico.`);
-                history.forEach(msg => addMessageToLog(msg.sender, msg.text, false));
+                history.forEach(msg => {
+                    // Ao carregar, não precisamos salvar novamente no localStorage
+                    addMessageToLog(msg.sender, msg.text, false);
+                });
             } catch (e) {
                 console.error('[FRONTEND] loadChatHistory: Erro ao carregar histórico:', e);
-                localStorage.removeItem(CHAT_HISTORY_KEY);
+                localStorage.removeItem(CHAT_HISTORY_KEY); // Limpa histórico corrompido
                 addMessageToLog('ai', 'Oi, meu amor! 🥰 Tivemos um probleminha carregando nosso papo anterior, mas já estou aqui!', false);
             }
         }
@@ -160,21 +392,20 @@
             console.log(`[FRONTEND] Evento 'submit': Prompt do usuário: "${userPrompt}"`);
 
             if (!userPrompt) {
-                 console.log("[FRONTEND] Evento 'submit': Prompt vazio, não enviando.");
-                 return;
+                console.log("[FRONTEND] Evento 'submit': Prompt vazio, não enviando.");
+                return;
             }
 
-            addMessageToLog('user', userPrompt);
+            // Adiciona e salva mensagem do usuário
+            addMessageToLog('user', userPrompt, true); // true para salvar
 
             const currentHistoryForAPI = (() => {
                 const saved = localStorage.getItem(CHAT_HISTORY_KEY);
+                // Pega as últimas N mensagens para enviar como contexto, para não sobrecarregar a API
+                // E também para garantir que o histórico enviado é o mesmo que está salvo
                 const historyArray = saved ? JSON.parse(saved) : [];
-                // console.log("[FRONTEND] Evento 'submit': Histórico do LocalStorage ANTES de enviar:", JSON.stringify(historyArray.map(m=>({sender: m.sender, text: m.text.substring(0,20)+"..."})), null, 2));
-                return historyArray.map(m => ({ sender: m.sender, text: m.text }));
+                return historyArray.slice(-20).map(m => ({ sender: m.sender, text: m.text })); // Envia últimas 20 por exemplo
             })();
-             // Descomente para ver o histórico que será enviado à API
-            // console.log("[FRONTEND] Evento 'submit': Histórico formatado para API (enviado):", JSON.stringify(currentHistoryForAPI.map(m=>({sender: m.sender, text: m.text.substring(0,20)+"..."})), null, 2));
-
 
             promptInput.value = '';
             promptInput.style.height = '40px';
@@ -187,26 +418,26 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: userPrompt,
-                        history: currentHistoryForAPI
+                        prompt: userPrompt, // O prompt atual é a última mensagem do usuário
+                        history: currentHistoryForAPI.slice(0, -1) // Envia o histórico SEM a última mensagem do usuário (que é o prompt)
                     })
                 });
 
                 console.log("[FRONTEND] Evento 'submit': Resposta do servidor (status):", response.status, response.statusText);
                 const data = await response.json();
-                // console.log("[FRONTEND] Evento 'submit': Dados recebidos do servidor (JSON):", JSON.stringify(data, null, 2));
 
                 if (!response.ok) {
-                    const errorMsg = data.error || `Erro ${response.status} do servidor.`;
+                    const errorMsg = data.error || `Erro ${response.status} do servidor. Tente novamente, amor.`;
                     console.error(`[FRONTEND] Evento 'submit': Erro da API: ${errorMsg}`, data.details || '');
-                    throw new Error(errorMsg); // Isso será pego pelo catch abaixo
+                    throw new Error(errorMsg);
                 }
-                addMessageToLog('ai', data.generatedText);
-                console.log(`[FRONTEND] Evento 'submit': Resposta da IA adicionada ao log: "${data.generatedText.substring(0,50)}..."`);
+                // Adiciona e salva resposta da IA
+                addMessageToLog('ai', data.generatedText, true); // true para salvar
+                console.log(`[FRONTEND] Evento 'submit': Resposta da IA adicionada ao log: "${data.generatedText.substring(0, 50)}..."`);
 
             } catch (error) {
-                // O error.message aqui já deve ser a mensagem de erro tratada (do throw new Error ou do fetch)
                 console.error('[FRONTEND] Evento \'submit\': Falha na requisição ou processamento:', error.message);
+                // Não salvar mensagem de erro no histórico persistente
                 addMessageToLog('error', `${error.message}`, false);
             } finally {
                 submitButton.disabled = false;
@@ -221,4 +452,5 @@
         console.log("--- [FRONTEND] Script finalizado (setup inicial) ---");
     </script>
 </body>
+
 </html>
