@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat com Luna 💖</title>
     <style>
-        /* Seus estilos CSS permanecem os mesmos da versão anterior */
+        /* ... (CSS sem alterações) ... */
         body {
             font-family: sans-serif;
             line-height: 1.5;
@@ -126,56 +126,42 @@
         }
 
         .message-container {
-            /* Estilo base para o container da mensagem + tempo */
             display: flex;
             flex-direction: column;
             max-width: 75%;
-            /* Mensagens não ocupam a largura toda */
             margin-bottom: 10px;
-            /* Espaçamento entre mensagens */
         }
 
         .user-message-container {
             align-self: flex-end;
-            /* Alinha à direita */
         }
 
         .ai-message-container {
             align-self: flex-start;
-            /* Alinha à esquerda */
         }
 
         .error-message-container {
             align-self: center;
-            /* Erros centralizados */
             width: 90%;
-            /* Erros podem ser mais largos */
         }
 
         .message {
             padding: 10px 15px;
             border-radius: 18px;
             word-wrap: break-word;
-            /* max-width: 100%; */
-            /* Removido, pois o container já limita */
             line-height: 1.4;
-            /* Adicionado para melhor legibilidade */
         }
 
         .user-message {
             background-color: #d1b3e6;
-            /* Lilás mais escuro para usuário */
             color: #333;
             border-bottom-right-radius: 5px;
-            /* "Rabicho" da mensagem */
         }
 
         .ai-message {
             background-color: #e6ccff;
-            /* Lilás mais claro para IA */
             color: #333;
             border-bottom-left-radius: 5px;
-            /* "Rabicho" da mensagem */
         }
 
         .error-message {
@@ -185,49 +171,21 @@
             text-align: center;
             border: 1px solid #ffbaba;
             border-radius: 8px;
-            /* Arredondamento geral para erros */
         }
 
         .message-time {
             font-size: 0.7em;
             color: #888;
             margin-top: 4px;
-            /* align-self: flex-end; */
-            /* Removido, o container pai cuida do alinhamento geral */
         }
 
-        /* Ajuste para que o tempo fique alinhado corretamente dentro do seu container */
         .user-message-container .message-time {
             align-self: flex-end;
             color: #a67fcf;
-            /* Cor para o tempo do usuário */
         }
 
         .ai-message-container .message-time {
-            align-self: flex-end;
-            /* Mantém à direita do balão da IA também, ou flex-start se preferir */
-            color: #c299e6;
-            /* Cor para o tempo da IA */
-        }
-
-        .error-message-container .message-time {
-            display: none;
-            /* Geralmente não mostramos tempo para erros */
-        }
-
-
-        .message-time {
-            font-size: 0.7em;
-            color: #888;
-            margin-top: 4px;
-            align-self: flex-end;
-        }
-
-        .user-message .message-time {
-            color: #a67fcf;
-        }
-
-        .ai-message .message-time {
+            align-self: flex-end; 
             color: #c299e6;
         }
 
@@ -267,7 +225,7 @@
 
         const backendUrl = 'https://luna-botnamoradeiro.onrender.com/api/generate';
         const dateTimeApiUrl = 'https://luna-botnamoradeiro.onrender.com/api/datetime';
-        const CHAT_HISTORY_KEY = 'luna_chat_history_v002'; // Mantido v3
+        const CHAT_HISTORY_KEY = 'luna_chat_history_v002';
 
         console.log("--- [FRONTEND] Script iniciado ---");
 
@@ -301,12 +259,10 @@
             }
         }
 
-        // Função para adicionar mensagens com timestamp
-        function addMessageToLog(sender, message, saveToHistory = true) { // Adicionado saveToHistory
+        function addMessageToLog(sender, message, saveToHistory = true) {
             const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message'); // Classe base
+            messageDiv.classList.add('message');
 
-            // Container para alinhar a mensagem (user à direita, ai à esquerda)
             const messageContainer = document.createElement('div');
             messageContainer.classList.add('message-container');
 
@@ -325,18 +281,16 @@
 
             const timeDiv = document.createElement('div');
             timeDiv.classList.add('message-time');
-            timeDiv.textContent = formatTime(); // Usando sua função formatTime
+            timeDiv.textContent = formatTime();
 
-            // Adiciona a mensagem e o tempo ao container específico
             messageContainer.appendChild(messageDiv);
-            if (sender !== 'error') { // Erros não precisam de timestamp individual visível assim
+            if (sender !== 'error') {
                 messageContainer.appendChild(timeDiv);
             }
 
             chatLog.appendChild(messageContainer);
             chatLog.scrollTop = chatLog.scrollHeight;
 
-            // Salvar no localStorage se saveToHistory for true
             if (saveToHistory && (sender === 'user' || sender === 'ai')) {
                 saveMessageToLocalStorage(sender, message);
             }
@@ -348,7 +302,7 @@
             const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             let history = savedHistory ? JSON.parse(savedHistory) : [];
             history.push({ sender, text, timestamp: new Date().toISOString() });
-            if (history.length > 50) { // Limite de histórico
+            if (history.length > 50) {
                 history = history.slice(-50);
                 console.log("[FRONTEND] Histórico antigo removido para manter o limite de 50 mensagens.");
             }
@@ -357,13 +311,12 @@
 
         async function loadChatHistory() {
             console.log("[FRONTEND] loadChatHistory: Iniciando carregamento do histórico...");
-            chatLog.innerHTML = ''; // Limpa o log visual
-            await fetchAndDisplayInitialDateTime(); // Exibe a data/hora inicial
+            chatLog.innerHTML = '';
+            await fetchAndDisplayInitialDateTime();
 
             const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             if (!savedHistory) {
                 console.log("[FRONTEND] loadChatHistory: Nenhum histórico salvo encontrado. Exibindo msg padrão.");
-                // Não salvar a mensagem inicial no histórico, ela é apenas de boas-vindas
                 addMessageToLog('ai', 'Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?', false);
                 return;
             }
@@ -371,12 +324,11 @@
                 const history = JSON.parse(savedHistory);
                 console.log(`[FRONTEND] loadChatHistory: ${history.length} mensagens carregadas do histórico.`);
                 history.forEach(msg => {
-                    // Ao carregar, não precisamos salvar novamente no localStorage
                     addMessageToLog(msg.sender, msg.text, false);
                 });
             } catch (e) {
                 console.error('[FRONTEND] loadChatHistory: Erro ao carregar histórico:', e);
-                localStorage.removeItem(CHAT_HISTORY_KEY); // Limpa histórico corrompido
+                localStorage.removeItem(CHAT_HISTORY_KEY);
                 addMessageToLog('ai', 'Oi, meu amor! 🥰 Tivemos um probleminha carregando nosso papo anterior, mas já estou aqui!', false);
             }
         }
@@ -396,16 +348,24 @@
                 return;
             }
 
-            // Adiciona e salva mensagem do usuário
-            addMessageToLog('user', userPrompt, true); // true para salvar
+            addMessageToLog('user', userPrompt, true);
 
-            const currentHistoryForAPI = (() => {
-                const saved = localStorage.getItem(CHAT_HISTORY_KEY);
-                // Pega as últimas N mensagens para enviar como contexto, para não sobrecarregar a API
-                // E também para garantir que o histórico enviado é o mesmo que está salvo
-                const historyArray = saved ? JSON.parse(saved) : [];
-                return historyArray.slice(-20).map(m => ({ sender: m.sender, text: m.text })); // Envia últimas 20 por exemplo
-            })();
+            // Obter o histórico COMPLETO do localStorage para enviar à API
+            // O backend espera que o 'prompt' seja a mensagem mais recente e 'history' seja o que veio antes.
+            const savedRawHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+            let historyForAPI = [];
+            if (savedRawHistory) {
+                const parsedHistory = JSON.parse(savedRawHistory);
+                // Pega todas as mensagens EXCETO a última (que é o userPrompt que acabamos de adicionar)
+                // E mapeia para o formato {sender, text}
+                historyForAPI = parsedHistory.slice(0, -1).map(m => ({ sender: m.sender, text: m.text }));
+            }
+             // Limitar o histórico enviado para a API (ex: últimas 20 interações = 40 mensagens)
+            if (historyForAPI.length > 40) { // 20 pares de user/model
+                historyForAPI = historyForAPI.slice(-40);
+                console.log("[FRONTEND] Histórico enviado para API truncado para as últimas 40 mensagens.");
+            }
+
 
             promptInput.value = '';
             promptInput.style.height = '40px';
@@ -418,8 +378,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: userPrompt, // O prompt atual é a última mensagem do usuário
-                        history: currentHistoryForAPI.slice(0, -1) // Envia o histórico SEM a última mensagem do usuário (que é o prompt)
+                        prompt: userPrompt,
+                        history: historyForAPI // Histórico sem a mensagem atual do usuário
                     })
                 });
 
@@ -431,13 +391,11 @@
                     console.error(`[FRONTEND] Evento 'submit': Erro da API: ${errorMsg}`, data.details || '');
                     throw new Error(errorMsg);
                 }
-                // Adiciona e salva resposta da IA
-                addMessageToLog('ai', data.generatedText, true); // true para salvar
+                addMessageToLog('ai', data.generatedText, true);
                 console.log(`[FRONTEND] Evento 'submit': Resposta da IA adicionada ao log: "${data.generatedText.substring(0, 50)}..."`);
 
             } catch (error) {
                 console.error('[FRONTEND] Evento \'submit\': Falha na requisição ou processamento:', error.message);
-                // Não salvar mensagem de erro no histórico persistente
                 addMessageToLog('error', `${error.message}`, false);
             } finally {
                 submitButton.disabled = false;
