@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat com Luna 💖</title>
     <style>
-        /* ... (CSS sem alterações) ... */
+        /* ... (CSS permanece o mesmo) ... */
         body {
             font-family: sans-serif;
             line-height: 1.5;
@@ -185,7 +185,7 @@
         }
 
         .ai-message-container .message-time {
-            align-self: flex-end; 
+            align-self: flex-end;
             color: #c299e6;
         }
 
@@ -238,7 +238,7 @@
             try {
                 const response = await fetch(dateTimeApiUrl);
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
+                    const errorData = await response.json().catch(() => ({})); // Tenta pegar JSON mesmo em erro
                     console.error("[FRONTEND] fetchAndDisplayInitialDateTime: Erro na resposta da API de data/hora", response.status, errorData);
                     throw new Error(errorData.error || `Erro ${response.status} ao buscar data/hora.`);
                 }
@@ -250,7 +250,7 @@
                 chatLog.appendChild(dateTimeDiv);
                 console.log("[FRONTEND] fetchAndDisplayInitialDateTime: Data/hora exibida:", dateTimeMessage);
             } catch (error) {
-                console.error("[FRONTEND] fetchAndDisplayInitialDateTime: Falha ao buscar ou exibir data/hora:", error.message);
+                console.error("[FRONTEND] fetchAndDisplayInitialDateTime: Falha ao buscar ou exibir data/hora:", error.message, error);
                 const errorDiv = document.createElement('div');
                 errorDiv.classList.add('initial-date-time');
                 errorDiv.style.color = 'red';
@@ -277,6 +277,7 @@
                 messageContainer.classList.add('error-message-container');
             }
 
+            // Para evitar problemas com HTML injetado acidentalmente, usar textContent
             messageDiv.textContent = message;
 
             const timeDiv = document.createElement('div');
@@ -302,7 +303,7 @@
             const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             let history = savedHistory ? JSON.parse(savedHistory) : [];
             history.push({ sender, text, timestamp: new Date().toISOString() });
-            if (history.length > 50) {
+            if (history.length > 50) { // Limite de histórico
                 history = history.slice(-50);
                 console.log("[FRONTEND] Histórico antigo removido para manter o limite de 50 mensagens.");
             }
@@ -311,8 +312,8 @@
 
         async function loadChatHistory() {
             console.log("[FRONTEND] loadChatHistory: Iniciando carregamento do histórico...");
-            chatLog.innerHTML = '';
-            await fetchAndDisplayInitialDateTime();
+            chatLog.innerHTML = ''; // Limpa o log visual
+            await fetchAndDisplayInitialDateTime(); // Exibe a data/hora inicial
 
             const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             if (!savedHistory) {
@@ -328,7 +329,7 @@
                 });
             } catch (e) {
                 console.error('[FRONTEND] loadChatHistory: Erro ao carregar histórico:', e);
-                localStorage.removeItem(CHAT_HISTORY_KEY);
+                localStorage.removeItem(CHAT_HISTORY_KEY); // Limpa histórico corrompido
                 addMessageToLog('ai', 'Oi, meu amor! 🥰 Tivemos um probleminha carregando nosso papo anterior, mas já estou aqui!', false);
             }
         }
@@ -350,22 +351,16 @@
 
             addMessageToLog('user', userPrompt, true);
 
-            // Obter o histórico COMPLETO do localStorage para enviar à API
-            // O backend espera que o 'prompt' seja a mensagem mais recente e 'history' seja o que veio antes.
             const savedRawHistory = localStorage.getItem(CHAT_HISTORY_KEY);
             let historyForAPI = [];
             if (savedRawHistory) {
                 const parsedHistory = JSON.parse(savedRawHistory);
-                // Pega todas as mensagens EXCETO a última (que é o userPrompt que acabamos de adicionar)
-                // E mapeia para o formato {sender, text}
                 historyForAPI = parsedHistory.slice(0, -1).map(m => ({ sender: m.sender, text: m.text }));
             }
-             // Limitar o histórico enviado para a API (ex: últimas 20 interações = 40 mensagens)
-            if (historyForAPI.length > 40) { // 20 pares de user/model
+            if (historyForAPI.length > 40) {
                 historyForAPI = historyForAPI.slice(-40);
                 console.log("[FRONTEND] Histórico enviado para API truncado para as últimas 40 mensagens.");
             }
-
 
             promptInput.value = '';
             promptInput.style.height = '40px';
@@ -379,24 +374,41 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         prompt: userPrompt,
-                        history: historyForAPI // Histórico sem a mensagem atual do usuário
+                        history: historyForAPI
                     })
                 });
 
                 console.log("[FRONTEND] Evento 'submit': Resposta do servidor (status):", response.status, response.statusText);
-                const data = await response.json();
+                const data = await response.json(); // Tenta parsear JSON mesmo se response.ok for false
 
                 if (!response.ok) {
                     const errorMsg = data.error || `Erro ${response.status} do servidor. Tente novamente, amor.`;
-                    console.error(`[FRONTEND] Evento 'submit': Erro da API: ${errorMsg}`, data.details || '');
-                    throw new Error(errorMsg);
+                    // Logar o objeto data completo em caso de erro para mais detalhes
+                    console.error(`[FRONTEND] Evento 'submit': Erro da API: ${errorMsg}`, 'Detalhes completos do erro do backend:', data);
+                    throw new Error(errorMsg); // Lança o erro para ser pego pelo catch
                 }
-                addMessageToLog('ai', data.generatedText, true);
-                console.log(`[FRONTEND] Evento 'submit': Resposta da IA adicionada ao log: "${data.generatedText.substring(0, 50)}..."`);
+
+                // ***** DEBUG DE PERFORMANCE *****
+                console.log("[FRONTEND] Resposta BRUTA da IA recebida:", data); // Loga o objeto data completo
+                if (data.generatedText) {
+                    console.log("[FRONTEND] Texto gerado pela IA:", data.generatedText);
+                    console.log("[FRONTEND] Comprimento do texto gerado:", data.generatedText.length);
+                    addMessageToLog('ai', data.generatedText, true);
+                } else {
+                    console.warn("[FRONTEND] A resposta da IA não continha 'generatedText'. Resposta completa:", data);
+                    addMessageToLog('ai', "Recebi uma resposta, mas não consegui extrair o texto. 🤔", true);
+                }
+                // ***** FIM DO DEBUG DE PERFORMANCE *****
+
+                // console.log(`[FRONTEND] Evento 'submit': Resposta da IA adicionada ao log: "${data.generatedText ? data.generatedText.substring(0, 50) : 'N/A'}..."`);
 
             } catch (error) {
-                console.error('[FRONTEND] Evento \'submit\': Falha na requisição ou processamento:', error.message);
-                addMessageToLog('error', `${error.message}`, false);
+                // O erro já foi logado acima se veio do !response.ok
+                // Este catch agora pegaria erros de rede, ou o erro lançado acima.
+                console.error('[FRONTEND] Evento \'submit\': Falha na requisição ou processamento final:', error.message, error); // Logar o objeto de erro completo
+                // A mensagem de erro já foi extraída e formatada se response.ok era false.
+                // Se for um erro de rede puro, error.message será usado.
+                addMessageToLog('error', error.message, false);
             } finally {
                 submitButton.disabled = false;
                 statusDiv.textContent = '';
@@ -410,5 +422,4 @@
         console.log("--- [FRONTEND] Script finalizado (setup inicial) ---");
     </script>
 </body>
-
 </html>
