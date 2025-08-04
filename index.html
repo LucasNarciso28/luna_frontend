@@ -5,182 +5,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat com Luna 💖</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        line-height: 1.5;
-        margin: 0;
-        padding: 0;
-        background-color: #f0e4f7;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-      }
-
-      #chat-container {
-        width: 90%;
-        max-width: 600px;
-        height: 85vh;
-        max-height: 700px;
-        background: #fff;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      h1 {
-        text-align: center;
-        color: #6a0dad;
-        padding: 15px;
-        margin: 0;
-        background-color: #e6ccff;
-        border-bottom: 1px solid #d1b3e6;
-        font-size: 1.4em;
-      }
-
-      #chat-log {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      
-      .message-container {
-        display: flex;
-        flex-direction: column;
-        max-width: 75%;
-        margin-bottom: 10px;
-      }
-
-      .user-message-container {
-        align-self: flex-end;
-      }
-
-      .ai-message-container {
-        align-self: flex-start;
-      }
-
-      .error-message-container {
-        align-self: center;
-        width: 90%;
-      }
-
-      .message {
-        padding: 10px 15px;
-        border-radius: 18px;
-        max-width: 100%;
-        word-wrap: break-word;
-        line-height: 1.4;
-      }
-
-      .user-message {
-        background-color: #d1b3e6;
-        color: #333;
-        border-bottom-right-radius: 5px;
-      }
-
-      .ai-message {
-        background-color: #e6ccff;
-        color: #333;
-        border-bottom-left-radius: 5px;
-      }
-
-      .error-message {
-        background-color: #ffdddd;
-        color: #d8000c;
-        font-style: italic;
-        text-align: center;
-        border: 1px solid #ffbaba;
-        border-radius: 8px; /* Unificado aqui */
-      }
-      
-      .message-time {
-        font-size: 0.7em;
-        color: #888;
-        margin-top: 4px;
-      }
-
-      .user-message-container .message-time {
-        align-self: flex-end;
-        color: #a67fcf;
-      }
-
-      .ai-message-container .message-time {
-        align-self: flex-end; /* Corrigido de flex-end para manter consistência */
-        color: #c299e6;
-      }
-
-      .error-message-container .message-time {
-        display: none;
-      }
-      
-      .initial-date-time {
-        font-size: 0.8em;
-        color: #777;
-        text-align: center;
-        margin: 10px 0;
-        font-style: italic;
-      }
-
-      #input-area {
-        display: flex;
-        padding: 10px;
-        border-top: 1px solid #d1b3e6;
-        background-color: #f8f0ff;
-      }
-
-      #prompt-input {
-        flex-grow: 1;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 20px;
-        margin-right: 10px;
-        font-size: 1rem;
-        resize: none;
-        height: 40px; /* Altura fixa inicial */
-        line-height: 1.4;
-        transition: height 0.2s ease;
-      }
-
-      #submit-button {
-        padding: 10px 20px;
-        background-color: #8a2be2;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: background-color 0.2s ease;
-      }
-
-      #submit-button:hover:not(:disabled) {
-        background-color: #6a0dad;
-      }
-
-      #submit-button:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-      }
-
-      #status {
-        text-align: center;
-        padding: 5px;
-        font-size: 0.9em;
-        color: #666;
-        height: 1.2em;
-      }
-    </style>
+    <link rel="stylesheet" href="index.css" />
   </head>
 
   <body>
     <div id="chat-container">
       <h1>Conversando com Luna 💖</h1>
       <div id="chat-log"></div>
+      <section id="historico-container" style="display: none">
+        <h2>Histórico de Conversas 💬</h2>
+        <ul id="lista-sessoes"></ul>
+        <div
+          id="visualizacao-conversa-detalhada"
+          style="margin-top: 20px"
+        ></div>
+      </section>
+
+      <!-- Botão para alternar entre chat e histórico -->
+      <button id="btn-historico">Ver Histórico</button>
+      <button id="btn-voltar-chat" style="display: none">Voltar ao Chat</button>
       <div id="status"></div>
       <form id="prompt-form" style="width: 100%">
         <div id="input-area">
@@ -195,201 +38,277 @@
     </div>
 
     <script>
-    const form = document.getElementById("prompt-form");
-    const promptInput = document.getElementById("prompt-input");
-    const submitButton = document.getElementById("submit-button");
-    const chatLog = document.getElementById("chat-log");
-    const statusDiv = document.getElementById("status");
+      const form = document.getElementById("prompt-form");
+      const promptInput = document.getElementById("prompt-input");
+      const submitButton = document.getElementById("submit-button");
+      const chatLog = document.getElementById("chat-log");
+      const statusDiv = document.getElementById("status");
 
-    const backendBaseUrl = "https://luna-botnamoradeiro.onrender.com";
+      const backendBaseUrl = "http://localhost:3001";
 
-    const chatApiUrl = `${backendBaseUrl}/api/generate`;
-    const dateTimeApiUrl = `${backendBaseUrl}/api/datetime`;
-    const logApiUrl = `${backendBaseUrl}/api/log-connection`;
-    const rankingApiUrl = `${backendBaseUrl}/api/ranking/registrar-acesso-bot`;
+      const chatApiUrl = `${backendBaseUrl}/api/generate`;
+      const dateTimeApiUrl = `${backendBaseUrl}/api/datetime`;
+      const logApiUrl = `${backendBaseUrl}/api/log-connection`;
+      const rankingApiUrl = `${backendBaseUrl}/api/ranking/registrar-acesso-bot`;
 
-    const CHAT_HISTORY_KEY = "luna_chat_history_v002";
+      const CHAT_HISTORY_KEY = "luna_chat_history_v002";
 
-    console.log("--- [FRONTEND] Script iniciado ---");
+      console.log("--- [FRONTEND] Script iniciado ---");
 
-    async function registrarConexaoUsuario() {
+      async function registrarConexaoUsuario() {
         console.log("[FRONTEND] Tentando registrar conexão do usuário...");
         try {
-            const response = await fetch(logApiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ acao: "acesso_inicial_chatbot" }),
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Falha ao registrar log de conexão:", errorData.error);
-            } else {
-                const result = await response.json();
-                console.log("Log de conexão registrado com sucesso:", result.message);
-            }
+          const response = await fetch(logApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ acao: "acesso_inicial_chatbot" }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error(
+              "Falha ao registrar log de conexão:",
+              errorData.error
+            );
+          } else {
+            const result = await response.json();
+            console.log(
+              "Log de conexão registrado com sucesso:",
+              result.message
+            );
+          }
         } catch (error) {
-            console.error("Erro de rede ao tentar registrar log de conexão:", error);
+          console.error(
+            "Erro de rede ao tentar registrar log de conexão:",
+            error
+          );
         }
-    }
+      }
 
-    async function registrarAcessoBotParaRanking(botId, nomeBot) {
-        console.log(`[FRONTEND] Tentando registrar acesso para ranking do bot: ${nomeBot}`);
+      async function registrarAcessoBotParaRanking(botId, nomeBot) {
+        console.log(
+          `[FRONTEND] Tentando registrar acesso para ranking do bot: ${nomeBot}`
+        );
         try {
-            const response = await fetch(rankingApiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ botId: botId, nomeBot: nomeBot }),
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Falha ao registrar acesso para ranking:", errorData.error);
-            } else {
-                const result = await response.json();
-                console.log("Acesso para ranking registrado com sucesso:", result.message);
-            }
+          const response = await fetch(rankingApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ botId: botId, nomeBot: nomeBot }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error(
+              "Falha ao registrar acesso para ranking:",
+              errorData.error
+            );
+          } else {
+            const result = await response.json();
+            console.log(
+              "Acesso para ranking registrado com sucesso:",
+              result.message
+            );
+          }
         } catch (error) {
-            console.error("Erro de rede ao tentar registrar acesso para ranking:", error);
+          console.error(
+            "Erro de rede ao tentar registrar acesso para ranking:",
+            error
+          );
         }
-    }
+      }
 
-    function formatTime(dateString) {
+      function formatTime(dateString) {
         const date = dateString ? new Date(dateString) : new Date();
-        return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
-    }
+        return date.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      }
 
-    async function fetchAndDisplayInitialDateTime() {
+      async function fetchAndDisplayInitialDateTime() {
         console.log("[FRONTEND] Buscando data/hora inicial...");
         try {
-            const response = await fetch(dateTimeApiUrl);
-            if (!response.ok) throw new Error(`Erro ${response.status} ao buscar data/hora.`);
-            const data = await response.json();
-            const dateTimeMessage = `Hoje é ${data.datetime} 💕`;
-            const dateTimeDiv = document.createElement("div");
-            dateTimeDiv.classList.add("initial-date-time");
-            dateTimeDiv.textContent = dateTimeMessage;
-            chatLog.appendChild(dateTimeDiv);
+          const response = await fetch(dateTimeApiUrl);
+          if (!response.ok)
+            throw new Error(`Erro ${response.status} ao buscar data/hora.`);
+          const data = await response.json();
+          const dateTimeMessage = `Hoje é ${data.datetime} 💕`;
+          const dateTimeDiv = document.createElement("div");
+          dateTimeDiv.classList.add("initial-date-time");
+          dateTimeDiv.textContent = dateTimeMessage;
+          chatLog.appendChild(dateTimeDiv);
         } catch (error) {
-            console.error("[FRONTEND] Falha ao buscar data/hora:", error);
-            const errorDiv = document.createElement("div");
-            errorDiv.classList.add("initial-date-time");
-            errorDiv.style.color = "red";
-            errorDiv.textContent = "Não consegui ver a data e hora agora, amor... 😢";
-            chatLog.appendChild(errorDiv);
+          console.error("[FRONTEND] Falha ao buscar data/hora:", error);
+          const errorDiv = document.createElement("div");
+          errorDiv.classList.add("initial-date-time");
+          errorDiv.style.color = "red";
+          errorDiv.textContent =
+            "Não consegui ver a data e hora agora, amor... 😢";
+          chatLog.appendChild(errorDiv);
         }
-    }
-    
-    // CORREÇÃO: Função de salvar no LocalStorage implementada
-    function saveMessageToLocalStorage(sender, text) {
-        try {
-            const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-            const history = savedHistory ? JSON.parse(savedHistory) : [];
-            history.push({ sender, text, timestamp: new Date().toISOString() });
-            
-            // Limitar o histórico para não sobrecarregar o localStorage
-            if (history.length > 50) {
-              history.splice(0, history.length - 50);
-            }
+      }
 
-            localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+      // CORREÇÃO: Função de salvar no LocalStorage implementada
+      function saveMessageToLocalStorage(sender, text) {
+        try {
+          const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+          const history = savedHistory ? JSON.parse(savedHistory) : [];
+          history.push({ sender, text, timestamp: new Date().toISOString() });
+
+          // Limitar o histórico para não sobrecarregar o localStorage
+          if (history.length > 50) {
+            history.splice(0, history.length - 50);
+          }
+
+          localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
         } catch (e) {
-            console.error("Falha ao salvar mensagem no LocalStorage:", e);
+          console.error("Falha ao salvar mensagem no LocalStorage:", e);
         }
-    }
-    
-    function addMessageToLog(sender, message, saveToHistory = true, timestamp) {
-        const messageContainer = document.createElement('div');
-        messageContainer.classList.add('message-container');
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        
-        if (sender === 'user') {
-            messageContainer.classList.add('user-message-container');
-            messageDiv.classList.add('user-message');
-        } else if (sender === 'ai') {
-            messageContainer.classList.add('ai-message-container');
-            messageDiv.classList.add('ai-message');
-        } else if (sender === 'error') {
-            messageContainer.classList.add('error-message-container');
-            messageDiv.classList.add('error-message');
+      }
+
+      function addMessageToLog(
+        sender,
+        message,
+        saveToHistory = true,
+        timestamp
+      ) {
+        const messageContainer = document.createElement("div");
+        messageContainer.classList.add("message-container");
+
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message");
+
+        if (sender === "user") {
+          messageContainer.classList.add("user-message-container");
+          messageDiv.classList.add("user-message");
+        } else if (sender === "ai") {
+          messageContainer.classList.add("ai-message-container");
+          messageDiv.classList.add("ai-message");
+        } else if (sender === "error") {
+          messageContainer.classList.add("error-message-container");
+          messageDiv.classList.add("error-message");
         }
-        
+
         messageDiv.textContent = message;
         messageContainer.appendChild(messageDiv);
 
-        if (sender !== 'error') {
-            const timeDiv = document.createElement('div');
-            timeDiv.classList.add('message-time');
-            timeDiv.textContent = formatTime(timestamp);
-            messageContainer.appendChild(timeDiv);
+        if (sender !== "error") {
+          const timeDiv = document.createElement("div");
+          timeDiv.classList.add("message-time");
+          timeDiv.textContent = formatTime(timestamp);
+          messageContainer.appendChild(timeDiv);
         }
-        
+
         chatLog.appendChild(messageContainer);
         chatLog.scrollTop = chatLog.scrollHeight;
 
-        if (saveToHistory && (sender === 'user' || sender === 'ai')) {
-            saveMessageToLocalStorage(sender, message);
+        if (saveToHistory && (sender === "user" || sender === "ai")) {
+          saveMessageToLocalStorage(sender, message);
         }
-    }
+      }
 
-    async function loadChatHistory() {
+      async function loadChatHistory() {
         console.log("[FRONTEND] Iniciando carregamento do histórico...");
         chatLog.innerHTML = "";
         await fetchAndDisplayInitialDateTime();
-        
+
         const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        
+
         if (!savedHistory) {
-            console.log("[FRONTEND] Nenhum histórico encontrado. Exibindo mensagem de boas-vindas.");
-            addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", true); // Salvar a primeira mensagem
-            return;
+          console.log(
+            "[FRONTEND] Nenhum histórico encontrado. Exibindo mensagem de boas-vindas."
+          );
+          addMessageToLog(
+            "ai",
+            "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?",
+            true
+          ); // Salvar a primeira mensagem
+          return;
         }
-        
+
         try {
-            const history = JSON.parse(savedHistory);
-            console.log(`[FRONTEND] Carregando ${history.length} mensagens do histórico.`);
-            history.forEach((msg) => {
-                addMessageToLog(msg.sender, msg.text, false, msg.timestamp);
-            });
+          const history = JSON.parse(savedHistory);
+          console.log(
+            `[FRONTEND] Carregando ${history.length} mensagens do histórico.`
+          );
+          history.forEach((msg) => {
+            addMessageToLog(msg.sender, msg.text, false, msg.timestamp);
+          });
         } catch (e) {
-            console.error("[FRONTEND] Erro ao carregar histórico. Limpando.", e);
-            localStorage.removeItem(CHAT_HISTORY_KEY);
-            addMessageToLog("ai", "Oi, meu amor! 🥰 Tivemos um probleminha para carregar nosso histórico, mas já estou aqui de novo!", true);
+          console.error("[FRONTEND] Erro ao carregar histórico. Limpando.", e);
+          localStorage.removeItem(CHAT_HISTORY_KEY);
+          addMessageToLog(
+            "ai",
+            "Oi, meu amor! 🥰 Tivemos um probleminha para carregar nosso histórico, mas já estou aqui de novo!",
+            true
+          );
         }
-    }
+      }
 
-    promptInput.addEventListener("input", () => {
-      // Auto-ajuste da altura do textarea
-      promptInput.style.height = 'auto';
-      promptInput.style.height = (promptInput.scrollHeight) + 'px';
-    });
+      // Gerar sessionId único no carregamento da página
+      const sessionId = `sess-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 6)}`;
 
-    form.addEventListener("submit", async (event) => {
+      localStorage.setItem("chat_session_id", sessionId);
+
+      // Função para salvar sessão ao sair/atualizar
+      async function salvarSessaoChat() {
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (!savedHistory) return;
+
+        try {
+          const history = JSON.parse(savedHistory);
+          await fetch(`${backendBaseUrl}/api/chat/save-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              messages: history,
+              userIP: "detected-ip", // Será preenchido pelo backend
+            }),
+          });
+          console.log("Sessão salva com sucesso!");
+        } catch (error) {
+          console.error("Erro ao salvar sessão:", error);
+        }
+      }
+
+      // Event listeners para salvar ao sair
+      window.addEventListener("beforeunload", salvarSessaoChat);
+      window.addEventListener("pagehide", salvarSessaoChat);
+
+      promptInput.addEventListener("input", () => {
+        // Auto-ajuste da altura do textarea
+        promptInput.style.height = "auto";
+        promptInput.style.height = promptInput.scrollHeight + "px";
+      });
+
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
         const userPrompt = promptInput.value.trim();
         if (!userPrompt) return;
-        
+
         addMessageToLog("user", userPrompt, true);
-        
+
         const savedRawHistory = localStorage.getItem(CHAT_HISTORY_KEY);
         let historyForAPI = [];
         if (savedRawHistory) {
-            try {
-                // A API precisa do histórico ANTES da mensagem atual.
-                const parsedHistory = JSON.parse(savedRawHistory);
-                historyForAPI = parsedHistory.slice(0, -1).map(m => ({
-                    sender: m.sender,
-                    text: m.text
-                }));
-            } catch (e) {
-                console.error("Erro ao parsear histórico para API", e);
-                historyForAPI = [];
-            }
+          try {
+            // A API precisa do histórico ANTES da mensagem atual.
+            const parsedHistory = JSON.parse(savedRawHistory);
+            historyForAPI = parsedHistory.slice(0, -1).map((m) => ({
+              sender: m.sender,
+              text: m.text,
+            }));
+          } catch (e) {
+            console.error("Erro ao parsear histórico para API", e);
+            historyForAPI = [];
+          }
         }
-        
+
         // Limita o histórico enviado para a API para otimizar a requisição
         if (historyForAPI.length > 40) {
-            historyForAPI = historyForAPI.slice(-40);
+          historyForAPI = historyForAPI.slice(-40);
         }
 
         promptInput.value = "";
@@ -398,36 +317,83 @@
         statusDiv.textContent = "Luna está digitando... 💭";
 
         try {
-            const response = await fetch(chatApiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: userPrompt, history: historyForAPI }),
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                // Usa a mensagem de erro vinda do backend, que é mais amigável
-                throw new Error(data.error || `Erro ${response.status}`);
-            }
+          const response = await fetch(chatApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: userPrompt,
+              history: historyForAPI,
+            }),
+          });
 
-            if (data.generatedText) {
-                addMessageToLog("ai", data.generatedText, true);
-            } else {
-                throw new Error("Recebi uma resposta, mas não consegui extrair o texto. 🤔");
-            }
+          const data = await response.json();
+
+          if (!response.ok) {
+            // Usa a mensagem de erro vinda do backend, que é mais amigável
+            throw new Error(data.error || `Erro ${response.status}`);
+          }
+
+          if (data.generatedText) {
+            addMessageToLog("ai", data.generatedText, true);
+          } else {
+            throw new Error(
+              "Recebi uma resposta, mas não consegui extrair o texto. 🤔"
+            );
+          }
         } catch (error) {
-            console.error("[FRONTEND] Erro na requisição para /api/generate:", error);
-            addMessageToLog("error", error.message, false);
+          console.error(
+            "[FRONTEND] Erro na requisição para /api/generate:",
+            error
+          );
+          addMessageToLog("error", error.message, false);
         } finally {
-            submitButton.disabled = false;
-            statusDiv.textContent = "";
-            promptInput.focus();
+          submitButton.disabled = false;
+          statusDiv.textContent = "";
+          promptInput.focus();
         }
-    });
+      });
 
-    // CORREÇÃO: Centralizando toda a lógica de inicialização aqui.
-    window.addEventListener('load', () => {
+      async function salvarSessaoChat() {
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (!savedHistory) return;
+
+        try {
+          const history = JSON.parse(savedHistory);
+
+          // Obter IP do usuário (simplificado)
+          let userIP = "desconhecido";
+          try {
+            const ipResponse = await fetch("https://api.ipify.org?format=json");
+            const ipData = await ipResponse.json();
+            userIP = ipData.ip;
+          } catch (ipError) {
+            console.warn("Não foi possível obter IP:", ipError);
+          }
+
+          await fetch(`${backendBaseUrl}/api/chat/save-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              messages: history,
+              userIP,
+            }),
+          });
+          console.log("Sessão salva com sucesso!");
+        } catch (error) {
+          console.error("Erro ao salvar sessão:", error);
+        }
+      }
+
+      // Salvar sessão quando o usuário sair
+      window.addEventListener("beforeunload", salvarSessaoChat);
+      window.addEventListener("pagehide", salvarSessaoChat);
+
+      // Salvar periodicamente a cada 2 minutos (opcional)
+      setInterval(salvarSessaoChat, 120000);
+
+      // CORREÇÃO: Centralizando toda a lógica de inicialização aqui.
+      window.addEventListener("load", () => {
         console.log("[FRONTEND] Página carregada. Iniciando rotinas...");
 
         // 1. Carrega o histórico de chat da memória do navegador
@@ -438,9 +404,9 @@
 
         // 3. Registra o acesso para o ranking (Simulado no backend)
         registrarAcessoBotParaRanking("luna-namoradeira", "Luna");
-    });
+      });
 
-    console.log("--- [FRONTEND] Script finalizado (setup inicial) ---");
-</script>
+      console.log("--- [FRONTEND] Script finalizado (setup inicial) ---");
+    </script>
   </body>
 </html>
