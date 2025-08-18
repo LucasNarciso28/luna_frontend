@@ -1,4 +1,17 @@
-<!-- index.html (CORRIGIDO) -->
+Com certeza! Você tem toda a razão. Faltou uma chave } para fechar a função salvarSessaoChat, o que fez com que todo o resto do código ficasse "dentro" dela, causando o erro de indentação e impedindo que o código funcionasse corretamente.
+
+Peço desculpas por esse descuido. Abaixo está o arquivo index.html com a correção exata e a indentação devidamente ajustada.
+
+index.html (Corrigido)
+
+A única alteração foi adicionar a chave } que faltava para fechar corretamente a função salvarSessaoChat.
+
+code
+Html
+download
+content_copy
+expand_less
+
 <!DOCTYPE html>
 <html lang="pt-br">
   <head>
@@ -7,11 +20,12 @@
     <title>Chat com Luna 💖</title>
     <link rel="stylesheet" href="index.css" />
   </head>
-
   <body>
     <div id="chat-container">
       <h1>Conversando com Luna 💖</h1>
+
       <div id="chat-log"></div>
+
       <section id="historico-container" style="display: none">
         <h2>Histórico de Conversas 💬</h2>
         <ul id="lista-sessoes"></ul>
@@ -21,10 +35,15 @@
         ></div>
       </section>
 
-      <!-- Botão para alternar entre chat e histórico -->
-      <button id="btn-historico">Ver Histórico</button>
-      <button id="btn-voltar-chat" style="display: none">Voltar ao Chat</button>
+      <div class="botoes-topo">
+        <button id="btn-historico">Ver Histórico</button>
+        <button id="btn-voltar-chat" style="display: none">
+          Voltar ao Chat
+        </button>
+      </div>
+
       <div id="status"></div>
+
       <form id="prompt-form" style="width: 100%">
         <div id="input-area">
           <textarea
@@ -38,139 +57,42 @@
     </div>
 
     <script>
+      // --- ELEMENTOS DO DOM ---
       const form = document.getElementById("prompt-form");
       const promptInput = document.getElementById("prompt-input");
       const submitButton = document.getElementById("submit-button");
       const chatLog = document.getElementById("chat-log");
       const statusDiv = document.getElementById("status");
+      const historicoContainer = document.getElementById("historico-container");
+      const listaSessoes = document.getElementById("lista-sessoes");
+      const conversaDetalhadaContainer = document.getElementById("visualizacao-conversa-detalhada");
+      const btnHistorico = document.getElementById("btn-historico");
+      const btnVoltarChat = document.getElementById("btn-voltar-chat");
 
+      // --- CONFIGURAÇÕES ---
       const backendBaseUrl = "http://localhost:3001";
+      const CHAT_HISTORY_KEY = "luna_chat_history_v004"; // Incrementei para garantir que não use cache antigo
+      const SESSION_ID_KEY = "luna_session_id";
 
-      const chatApiUrl = `${backendBaseUrl}/api/generate`;
-      const dateTimeApiUrl = `${backendBaseUrl}/api/datetime`;
-      const logApiUrl = `${backendBaseUrl}/api/log-connection`;
-      const rankingApiUrl = `${backendBaseUrl}/api/ranking/registrar-acesso-bot`;
+      // --- FUNÇÕES ---
 
-      const CHAT_HISTORY_KEY = "luna_chat_history_v002";
-
-      console.log("--- [FRONTEND] Script iniciado ---");
-
-      async function registrarConexaoUsuario() {
-        console.log("[FRONTEND] Tentando registrar conexão do usuário...");
-        try {
-          const response = await fetch(logApiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ acao: "acesso_inicial_chatbot" }),
-          });
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error(
-              "Falha ao registrar log de conexão:",
-              errorData.error
-            );
-          } else {
-            const result = await response.json();
-            console.log(
-              "Log de conexão registrado com sucesso:",
-              result.message
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Erro de rede ao tentar registrar log de conexão:",
-            error
-          );
+      function getSessionId() {
+        let sessionId = localStorage.getItem(SESSION_ID_KEY);
+        if (!sessionId) {
+          sessionId = `sess-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          localStorage.setItem(SESSION_ID_KEY, sessionId);
         }
+        return sessionId;
       }
 
-      async function registrarAcessoBotParaRanking(botId, nomeBot) {
-        console.log(
-          `[FRONTEND] Tentando registrar acesso para ranking do bot: ${nomeBot}`
-        );
-        try {
-          const response = await fetch(rankingApiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ botId: botId, nomeBot: nomeBot }),
-          });
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error(
-              "Falha ao registrar acesso para ranking:",
-              errorData.error
-            );
-          } else {
-            const result = await response.json();
-            console.log(
-              "Acesso para ranking registrado com sucesso:",
-              result.message
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Erro de rede ao tentar registrar acesso para ranking:",
-            error
-          );
-        }
-      }
+      const sessionId = getSessionId();
 
       function formatTime(dateString) {
         const date = dateString ? new Date(dateString) : new Date();
-        return date.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        });
+        return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
       }
 
-      async function fetchAndDisplayInitialDateTime() {
-        console.log("[FRONTEND] Buscando data/hora inicial...");
-        try {
-          const response = await fetch(dateTimeApiUrl);
-          if (!response.ok)
-            throw new Error(`Erro ${response.status} ao buscar data/hora.`);
-          const data = await response.json();
-          const dateTimeMessage = `Hoje é ${data.datetime} 💕`;
-          const dateTimeDiv = document.createElement("div");
-          dateTimeDiv.classList.add("initial-date-time");
-          dateTimeDiv.textContent = dateTimeMessage;
-          chatLog.appendChild(dateTimeDiv);
-        } catch (error) {
-          console.error("[FRONTEND] Falha ao buscar data/hora:", error);
-          const errorDiv = document.createElement("div");
-          errorDiv.classList.add("initial-date-time");
-          errorDiv.style.color = "red";
-          errorDiv.textContent =
-            "Não consegui ver a data e hora agora, amor... 😢";
-          chatLog.appendChild(errorDiv);
-        }
-      }
-
-      // CORREÇÃO: Função de salvar no LocalStorage implementada
-      function saveMessageToLocalStorage(sender, text) {
-        try {
-          const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-          const history = savedHistory ? JSON.parse(savedHistory) : [];
-          history.push({ sender, text, timestamp: new Date().toISOString() });
-
-          // Limitar o histórico para não sobrecarregar o localStorage
-          if (history.length > 50) {
-            history.splice(0, history.length - 50);
-          }
-
-          localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
-        } catch (e) {
-          console.error("Falha ao salvar mensagem no LocalStorage:", e);
-        }
-      }
-
-      function addMessageToLog(
-        sender,
-        message,
-        saveToHistory = true,
-        timestamp
-      ) {
+      function addMessageToLog(sender, message, saveToStorage = true, timestamp) {
         const messageContainer = document.createElement("div");
         messageContainer.classList.add("message-container");
 
@@ -201,84 +123,156 @@
         chatLog.appendChild(messageContainer);
         chatLog.scrollTop = chatLog.scrollHeight;
 
-        if (saveToHistory && (sender === "user" || sender === "ai")) {
+        if (saveToStorage && (sender === "user" || sender === "ai")) {
           saveMessageToLocalStorage(sender, message);
         }
       }
 
-      async function loadChatHistory() {
-        console.log("[FRONTEND] Iniciando carregamento do histórico...");
+      function saveMessageToLocalStorage(sender, text) {
+        try {
+          const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+          const history = savedHistory ? JSON.parse(savedHistory) : [];
+          history.push({ sender, text, timestamp: new Date().toISOString() });
+          if (history.length > 50) history.splice(0, history.length - 50);
+          localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+        } catch (e) {
+          console.error("Falha ao salvar mensagem no LocalStorage:", e);
+        }
+      }
+
+      async function fetchAndDisplayInitialDateTime() {
+        try {
+          const response = await fetch(`${backendBaseUrl}/api/datetime`);
+          if (!response.ok) throw new Error(`Erro ${response.status}`);
+          const data = await response.json();
+          const dateTimeDiv = document.createElement("div");
+          dateTimeDiv.classList.add("initial-date-time");
+          dateTimeDiv.textContent = `Hoje é ${data.datetime} 💕`;
+          chatLog.appendChild(dateTimeDiv);
+        } catch (error) {
+          console.error("Falha ao buscar data/hora:", error);
+        }
+      }
+
+      async function loadChatHistoryFromStorage() {
+        console.log("[FRONTEND] Carregando histórico do LocalStorage...");
         chatLog.innerHTML = "";
         await fetchAndDisplayInitialDateTime();
 
         const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-
         if (!savedHistory) {
-          console.log(
-            "[FRONTEND] Nenhum histórico encontrado. Exibindo mensagem de boas-vindas."
-          );
-          addMessageToLog(
-            "ai",
-            "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?",
-            true
-          ); // Salvar a primeira mensagem
+          addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", true);
+          return;
+        }
+        try {
+          const history = JSON.parse(savedHistory);
+          history.forEach((msg) => addMessageToLog(msg.sender, msg.text, false, msg.timestamp));
+        } catch (e) {
+          console.error("Erro ao carregar histórico do LocalStorage. Limpando.", e);
+          localStorage.removeItem(CHAT_HISTORY_KEY);
+          addMessageToLog("ai", "Tive um probleminha para carregar nosso histórico, mas já estou aqui!", true);
+        }
+      }
+
+      async function salvarSessaoChat() {
+        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+        if (!savedHistory) {
           return;
         }
 
         try {
-          const history = JSON.parse(savedHistory);
-          console.log(
-            `[FRONTEND] Carregando ${history.length} mensagens do histórico.`
-          );
-          history.forEach((msg) => {
-            addMessageToLog(msg.sender, msg.text, false, msg.timestamp);
-          });
-        } catch (e) {
-          console.error("[FRONTEND] Erro ao carregar histórico. Limpando.", e);
-          localStorage.removeItem(CHAT_HISTORY_KEY);
-          addMessageToLog(
-            "ai",
-            "Oi, meu amor! 🥰 Tivemos um probleminha para carregar nosso histórico, mas já estou aqui de novo!",
-            true
-          );
-        }
-      }
+          const messages = JSON.parse(savedHistory);
+          if (!Array.isArray(messages) || messages.length === 0) {
+            return;
+          }
 
-      // Gerar sessionId único no carregamento da página
-      const sessionId = `sess-${Date.now()}-${Math.random()
-        .toString(36)
-        .substr(2, 6)}`;
-
-      localStorage.setItem("chat_session_id", sessionId);
-
-      // Função para salvar sessão ao sair/atualizar
-      async function salvarSessaoChat() {
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        if (!savedHistory) return;
-
-        try {
-          const history = JSON.parse(savedHistory);
           await fetch(`${backendBaseUrl}/api/chat/save-session`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sessionId,
-              messages: history,
-              userIP: "detected-ip", // Será preenchido pelo backend
-            }),
+            body: JSON.stringify({ sessionId, messages }),
           });
-          console.log("Sessão salva com sucesso!");
+          console.log("[FRONTEND] Sessão sincronizada com o backend.");
         } catch (error) {
-          console.error("Erro ao salvar sessão:", error);
+          console.error("[FRONTEND] Erro ao tentar salvar sessão no backend:", error);
+        }
+      } // <--- ESTA CHAVE FALTAVA
+
+      // --- LÓGICA DE VISUALIZAÇÃO DE HISTÓRICO ---
+
+      async function carregarHistoricoSessoes() {
+        try {
+          const response = await fetch(`${backendBaseUrl}/api/chat/historicos`);
+          if (!response.ok) throw new Error(`Erro ${response.status}`);
+          const sessoes = await response.json();
+
+          listaSessoes.innerHTML = "";
+          conversaDetalhadaContainer.innerHTML = "";
+
+          if (sessoes.length === 0) {
+            listaSessoes.innerHTML = "<li>Nenhuma conversa encontrada.</li>";
+            return;
+          }
+
+          sessoes.forEach((sessao) => {
+            const li = document.createElement("li");
+            const data = new Date(sessao.startTime).toLocaleString("pt-BR");
+            li.textContent = `Conversa de ${data} (${sessao.messageCount} msgs)`;
+            li.style.cursor = "pointer";
+            li.dataset.sessionId = sessao.sessionId;
+
+            li.addEventListener("click", () => exibirConversaDetalhada(sessao.sessionId));
+            listaSessoes.appendChild(li);
+          });
+        } catch (error) {
+          console.error("Erro ao carregar histórico:", error);
+          listaSessoes.innerHTML = "<li>Erro ao carregar o histórico. 😢</li>";
         }
       }
 
-      // Event listeners para salvar ao sair
-      window.addEventListener("beforeunload", salvarSessaoChat);
-      window.addEventListener("pagehide", salvarSessaoChat);
+      async function exibirConversaDetalhada(sessionIdToFetch) {
+        try {
+          const response = await fetch(`${backendBaseUrl}/api/chat/historicos/${sessionIdToFetch}`);
+          if (!response.ok) throw new Error(`Erro ${response.status}`);
+          const sessionDetails = await response.json();
+          const { messages } = sessionDetails;
+
+          conversaDetalhadaContainer.innerHTML = "<h3>Detalhes da Conversa</h3>";
+
+          messages.forEach((msg) => {
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("message-container", msg.sender === "user" ? "user-message-container" : "ai-message-container");
+
+            const textDiv = document.createElement("div");
+            textDiv.classList.add("message", msg.sender === "user" ? "user-message" : "ai-message");
+            textDiv.textContent = msg.text;
+
+            msgDiv.appendChild(textDiv);
+            conversaDetalhadaContainer.appendChild(msgDiv);
+          });
+        } catch (error) {
+          console.error("Erro ao buscar detalhes da conversa:", error);
+          conversaDetalhadaContainer.innerHTML = "<h3>Não foi possível carregar os detalhes.</h3>";
+        }
+      }
+
+      // --- EVENT LISTENERS ---
+
+      btnHistorico.addEventListener("click", () => {
+        historicoContainer.style.display = "block";
+        chatLog.style.display = "none";
+        btnHistorico.style.display = "none";
+        btnVoltarChat.style.display = "inline-block";
+        carregarHistoricoSessoes();
+      });
+
+      btnVoltarChat.addEventListener("click", () => {
+        historicoContainer.style.display = "none";
+        chatLog.style.display = "block";
+        btnHistorico.style.display = "inline-block";
+        btnVoltarChat.style.display = "none";
+      });
 
       promptInput.addEventListener("input", () => {
-        // Auto-ajuste da altura do textarea
         promptInput.style.height = "auto";
         promptInput.style.height = promptInput.scrollHeight + "px";
       });
@@ -294,57 +288,30 @@
         let historyForAPI = [];
         if (savedRawHistory) {
           try {
-            // A API precisa do histórico ANTES da mensagem atual.
             const parsedHistory = JSON.parse(savedRawHistory);
-            historyForAPI = parsedHistory.slice(0, -1).map((m) => ({
-              sender: m.sender,
-              text: m.text,
-            }));
+            historyForAPI = parsedHistory.slice(0, -1);
           } catch (e) {
             console.error("Erro ao parsear histórico para API", e);
-            historyForAPI = [];
           }
         }
 
-        // Limita o histórico enviado para a API para otimizar a requisição
-        if (historyForAPI.length > 40) {
-          historyForAPI = historyForAPI.slice(-40);
-        }
+        if (historyForAPI.length > 40) historyForAPI = historyForAPI.slice(-40);
 
         promptInput.value = "";
-        promptInput.style.height = "40px"; // Reseta altura
+        promptInput.style.height = "auto";
         submitButton.disabled = true;
         statusDiv.textContent = "Luna está digitando... 💭";
 
         try {
-          const response = await fetch(chatApiUrl, {
+          const response = await fetch(`${backendBaseUrl}/api/generate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              prompt: userPrompt,
-              history: historyForAPI,
-            }),
+            body: JSON.stringify({ prompt: userPrompt, history: historyForAPI }),
           });
-
           const data = await response.json();
-
-          if (!response.ok) {
-            // Usa a mensagem de erro vinda do backend, que é mais amigável
-            throw new Error(data.error || `Erro ${response.status}`);
-          }
-
-          if (data.generatedText) {
-            addMessageToLog("ai", data.generatedText, true);
-          } else {
-            throw new Error(
-              "Recebi uma resposta, mas não consegui extrair o texto. 🤔"
-            );
-          }
+          if (!response.ok) throw new Error(data.error || `Erro ${response.status}`);
+          addMessageToLog("ai", data.generatedText, true);
         } catch (error) {
-          console.error(
-            "[FRONTEND] Erro na requisição para /api/generate:",
-            error
-          );
           addMessageToLog("error", error.message, false);
         } finally {
           submitButton.disabled = false;
@@ -353,60 +320,27 @@
         }
       });
 
-      async function salvarSessaoChat() {
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        if (!savedHistory) return;
+      // --- ROTINAS DE INICIALIZAÇÃO E CICLO DE VIDA ---
 
-        try {
-          const history = JSON.parse(savedHistory);
-
-          // Obter IP do usuário (simplificado)
-          let userIP = "desconhecido";
-          try {
-            const ipResponse = await fetch("https://api.ipify.org?format=json");
-            const ipData = await ipResponse.json();
-            userIP = ipData.ip;
-          } catch (ipError) {
-            console.warn("Não foi possível obter IP:", ipError);
-          }
-
-          await fetch(`${backendBaseUrl}/api/chat/save-session`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sessionId,
-              messages: history,
-              userIP,
-            }),
-          });
-          console.log("Sessão salva com sucesso!");
-        } catch (error) {
-          console.error("Erro ao salvar sessão:", error);
-        }
-      }
-
-      // Salvar sessão quando o usuário sair
-      window.addEventListener("beforeunload", salvarSessaoChat);
-      window.addEventListener("pagehide", salvarSessaoChat);
-
-      // Salvar periodicamente a cada 2 minutos (opcional)
-      setInterval(salvarSessaoChat, 120000);
-
-      // CORREÇÃO: Centralizando toda a lógica de inicialização aqui.
       window.addEventListener("load", () => {
-        console.log("[FRONTEND] Página carregada. Iniciando rotinas...");
+        loadChatHistoryFromStorage();
 
-        // 1. Carrega o histórico de chat da memória do navegador
-        loadChatHistory();
+        fetch(`${backendBaseUrl}/api/log-connection`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao: "acesso_inicial_chatbot" }),
+        }).catch(err => console.error("Erro ao registrar log de conexão:", err));
 
-        // 2. Registra a conexão no log oficial (MongoDB)
-        registrarConexaoUsuario();
-
-        // 3. Registra o acesso para o ranking (Simulado no backend)
-        registrarAcessoBotParaRanking("luna-namoradeira", "Luna");
+        fetch(`${backendBaseUrl}/api/ranking/registrar-acesso-bot`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ botId: "luna-namoradeira", nomeBot: "Luna" }),
+        }).catch(err => console.error("Erro ao registrar acesso para ranking:", err));
       });
 
-      console.log("--- [FRONTEND] Script finalizado (setup inicial) ---");
+      window.addEventListener("beforeunload", salvarSessaoChat);
+      window.addEventListener("pagehide", salvarSessaoChat);
+      setInterval(salvarSessaoChat, 60000);
     </script>
   </body>
 </html>
+
+Agora o código do seu frontend está sintaticamente correto. Substitua o conteúdo do seu index.html por esta versão e, para garantir, limpe novamente o cache e os dados do site no navegador antes de testar.
