@@ -7,39 +7,33 @@
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
-    <div id="chat-container">
-      <h1>Conversando com Luna 💖</h1>
-
-      <div id="chat-log"></div>
-
-      <section id="historico-container" style="display: none">
+    <div id="main-layout">
+      <section id="historico-container">
         <h2>Histórico de Conversas 💬</h2>
-        <ul id="lista-sessoes"></ul>
-        <div
-          id="visualizacao-conversa-detalhada"
-          style="margin-top: 20px"
-        ></div>
+        <button id="btn-novo-chat" class="action-button">✨ Novo Chat</button>
+        <ul id="lista-sessoes">
+          <li>Nenhuma conversa encontrada.</li>
+        </ul>
       </section>
 
-      <div class="botoes-topo">
-        <button id="btn-historico">Ver Histórico</button>
-        <button id="btn-voltar-chat" style="display: none">
-          Voltar ao Chat
-        </button>
+      <div id="chat-container">
+        <h1>Conversando com Luna 💖</h1>
+
+        <div id="chat-log"></div>
+
+        <div id="status"></div>
+
+        <form id="prompt-form">
+          <div id="input-area">
+            <textarea
+              id="prompt-input"
+              rows="1"
+              placeholder="Digite sua mensagem..."
+            ></textarea>
+            <button id="submit-button" type="submit">Enviar</button>
+          </div>
+        </form>
       </div>
-
-      <div id="status"></div>
-
-      <form id="prompt-form" style="width: 100%">
-        <div id="input-area">
-          <textarea
-            id="prompt-input"
-            rows="1"
-            placeholder="Digite sua mensagem..."
-          ></textarea>
-          <button id="submit-button" type="submit">Enviar</button>
-        </div>
-      </form>
     </div>
 
     <script>
@@ -51,17 +45,14 @@
       const statusDiv = document.getElementById("status");
       const historicoContainer = document.getElementById("historico-container");
       const listaSessoes = document.getElementById("lista-sessoes");
-      const conversaDetalhadaContainer = document.getElementById("visualizacao-conversa-detalhada");
-      const btnHistorico = document.getElementById("btn-historico");
-      const btnVoltarChat = document.getElementById("btn-voltar-chat");
+      const btnNovoChat = document.getElementById("btn-novo-chat"); // Novo botão
 
       // --- CONFIGURAÇÕES ---
-      const backendBaseUrl = "http://localhost:3001";
-      const CHAT_HISTORY_KEY = "luna_chat_history_v004"; // Incrementei para garantir que não use cache antigo
+      const backendBaseUrl = "https://luna-botnamoradeiro.onrender.com";
+      const CHAT_HISTORY_KEY = "luna_chat_history_v004";
       const SESSION_ID_KEY = "luna_session_id";
 
       // --- FUNÇÕES ---
-
       function getSessionId() {
         let sessionId = localStorage.getItem(SESSION_ID_KEY);
         if (!sessionId) {
@@ -70,15 +61,18 @@
         }
         return sessionId;
       }
-
-      const sessionId = getSessionId();
+      let currentSessionId = getSessionId();
 
       function formatTime(dateString) {
         const date = dateString ? new Date(dateString) : new Date();
-        return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", hour12: false });
+        return date.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
       }
 
-      function addMessageToLog(sender, message, saveToStorage = true, timestamp) {
+      function addMessageToLog(sender, message, timestamp) {
         const messageContainer = document.createElement("div");
         messageContainer.classList.add("message-container");
 
@@ -108,22 +102,6 @@
 
         chatLog.appendChild(messageContainer);
         chatLog.scrollTop = chatLog.scrollHeight;
-
-        if (saveToStorage && (sender === "user" || sender === "ai")) {
-          saveMessageToLocalStorage(sender, message);
-        }
-      }
-
-      function saveMessageToLocalStorage(sender, text) {
-        try {
-          const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-          const history = savedHistory ? JSON.parse(savedHistory) : [];
-          history.push({ sender, text, timestamp: new Date().toISOString() });
-          if (history.length > 50) history.splice(0, history.length - 50);
-          localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
-        } catch (e) {
-          console.error("Falha ao salvar mensagem no LocalStorage:", e);
-        }
       }
 
       async function fetchAndDisplayInitialDateTime() {
@@ -140,59 +118,49 @@
         }
       }
 
-      async function loadChatHistoryFromStorage() {
-        console.log("[FRONTEND] Carregando histórico do LocalStorage...");
+      async function loadChatHistoryFromBackend(sessionIdToLoad = currentSessionId) {
+        console.log(`[FRONTEND] Carregando histórico da sessão ${sessionIdToLoad} do backend...`);
         chatLog.innerHTML = "";
         await fetchAndDisplayInitialDateTime();
 
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        if (!savedHistory) {
-          addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", true);
-          return;
-        }
         try {
-          const history = JSON.parse(savedHistory);
-          history.forEach((msg) => addMessageToLog(msg.sender, msg.text, false, msg.timestamp));
-        } catch (e) {
-          console.error("Erro ao carregar histórico do LocalStorage. Limpando.", e);
-          localStorage.removeItem(CHAT_HISTORY_KEY);
-          addMessageToLog("ai", "Tive um probleminha para carregar nosso histórico, mas já estou aqui!", true);
+          const response = await fetch(`${backendBaseUrl}/api/chat/historicos/${sessionIdToLoad}`);
+          if (!response.ok) {
+            addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", new Date().toISOString());
+            return;
+          }
+          const sessionDetails = await response.json();
+          const messages = sessionDetails.messages;
+
+          if (messages && messages.length > 0) {
+            messages.forEach((msg) => addMessageToLog(msg.sender, msg.text, msg.timestamp));
+          } else {
+            addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", new Date().toISOString());
+          }
+        } catch (error) {
+          console.error("Erro ao carregar histórico da sessão do backend:", error);
+          addMessageToLog("error", "Ops, não consegui carregar nosso histórico agora. Mas estou aqui para você! 💖", new Date().toISOString());
         }
       }
 
-      async function salvarSessaoChat() {
-        const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        if (!savedHistory) {
-          return;
-        }
-
+      function updateLocalStorageHistory(sender, text, timestamp) {
         try {
-          const messages = JSON.parse(savedHistory);
-          if (!Array.isArray(messages) || messages.length === 0) {
-            return;
-          }
-
-          await fetch(`${backendBaseUrl}/api/chat/save-session`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId, messages }),
-          });
-          console.log("[FRONTEND] Sessão sincronizada com o backend.");
-        } catch (error) {
-          console.error("[FRONTEND] Erro ao tentar salvar sessão no backend:", error);
+          const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+          const history = savedHistory ? JSON.parse(savedHistory) : [];
+          history.push({ sender, text, timestamp: timestamp || new Date().toISOString() });
+          if (history.length > 50) history.splice(0, history.length - 50);
+          localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+        } catch (e) {
+          console.error("Falha ao atualizar histórico no LocalStorage:", e);
         }
-      } // <--- ESTA CHAVE FALTAVA
-
-      // --- LÓGICA DE VISUALIZAÇÃO DE HISTÓRICO ---
+      }
 
       async function carregarHistoricoSessoes() {
         try {
           const response = await fetch(`${backendBaseUrl}/api/chat/historicos`);
           if (!response.ok) throw new Error(`Erro ${response.status}`);
           const sessoes = await response.json();
-
           listaSessoes.innerHTML = "";
-          conversaDetalhadaContainer.innerHTML = "";
 
           if (sessoes.length === 0) {
             listaSessoes.innerHTML = "<li>Nenhuma conversa encontrada.</li>";
@@ -201,12 +169,45 @@
 
           sessoes.forEach((sessao) => {
             const li = document.createElement("li");
-            const data = new Date(sessao.startTime).toLocaleString("pt-BR");
-            li.textContent = `Conversa de ${data} (${sessao.messageCount} msgs)`;
-            li.style.cursor = "pointer";
             li.dataset.sessionId = sessao.sessionId;
+            if (sessao.sessionId === currentSessionId) {
+                li.classList.add('current-session');
+            }
 
-            li.addEventListener("click", () => exibirConversaDetalhada(sessao.sessionId));
+            const infoDiv = document.createElement("div");
+            infoDiv.classList.add("conversa-info");
+            const tituloDiv = document.createElement("div");
+            tituloDiv.classList.add("conversa-titulo");
+            const data = new Date(sessao.startTime).toLocaleString("pt-BR");
+            tituloDiv.textContent = `Conversa de ${data} (${sessao.messageCount} msgs)`;
+            const previewDiv = document.createElement("div");
+            previewDiv.classList.add("conversa-preview");
+            const previewText = sessao.primeiraMensagem || "(Sem prévia disponível)";
+            previewDiv.textContent = previewText.length > 50 ? `${previewText.substring(0, 50)}...` : previewText;
+            infoDiv.appendChild(tituloDiv);
+            infoDiv.appendChild(previewDiv);
+
+            const btnExcluir = document.createElement("button");
+            btnExcluir.classList.add("btn-excluir");
+            btnExcluir.innerHTML = "🗑️";
+            btnExcluir.title = "Excluir conversa";
+
+            btnExcluir.addEventListener("click", (e) => {
+              e.stopPropagation();
+              excluirConversa(sessao.sessionId);
+            });
+
+            li.addEventListener("click", () => {
+                if (sessao.sessionId !== currentSessionId) {
+                    localStorage.setItem(SESSION_ID_KEY, sessao.sessionId);
+                    currentSessionId = sessao.sessionId;
+                    loadChatHistoryFromBackend(currentSessionId);
+                    carregarHistoricoSessoes();
+                }
+            });
+
+            li.appendChild(infoDiv);
+            li.appendChild(btnExcluir);
             listaSessoes.appendChild(li);
           });
         } catch (error) {
@@ -215,73 +216,36 @@
         }
       }
 
-      async function exibirConversaDetalhada(sessionIdToFetch) {
+      async function excluirConversa(sessionIdToDelete) {
+        if (!confirm("Tem certeza que deseja excluir esta conversa? A ação não pode ser desfeita.")) return;
         try {
-          const response = await fetch(`${backendBaseUrl}/api/chat/historicos/${sessionIdToFetch}`);
-          if (!response.ok) throw new Error(`Erro ${response.status}`);
-          const sessionDetails = await response.json();
-          const { messages } = sessionDetails;
+          const response = await fetch(`${backendBaseUrl}/api/chat/historicos/${sessionIdToDelete}`, { method: "DELETE" });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Falha ao excluir.");
+          alert(data.message || "Conversa excluída com sucesso!");
+          carregarHistoricoSessoes();
 
-          conversaDetalhadaContainer.innerHTML = "<h3>Detalhes da Conversa</h3>";
-
-          messages.forEach((msg) => {
-            const msgDiv = document.createElement("div");
-            msgDiv.classList.add("message-container", msg.sender === "user" ? "user-message-container" : "ai-message-container");
-
-            const textDiv = document.createElement("div");
-            textDiv.classList.add("message", msg.sender === "user" ? "user-message" : "ai-message");
-            textDiv.textContent = msg.text;
-
-            msgDiv.appendChild(textDiv);
-            conversaDetalhadaContainer.appendChild(msgDiv);
-          });
+          if (sessionIdToDelete === currentSessionId) {
+            localStorage.removeItem(SESSION_ID_KEY);
+            currentSessionId = getSessionId();
+            loadChatHistoryFromBackend(currentSessionId);
+          }
         } catch (error) {
-          console.error("Erro ao buscar detalhes da conversa:", error);
-          conversaDetalhadaContainer.innerHTML = "<h3>Não foi possível carregar os detalhes.</h3>";
+          console.error("Erro ao excluir conversa:", error);
+          alert(`Não foi possível excluir a conversa. Erro: ${error.message}`);
         }
       }
 
-      // --- EVENT LISTENERS ---
-
-      btnHistorico.addEventListener("click", () => {
-        historicoContainer.style.display = "block";
-        chatLog.style.display = "none";
-        btnHistorico.style.display = "none";
-        btnVoltarChat.style.display = "inline-block";
-        carregarHistoricoSessoes();
-      });
-
-      btnVoltarChat.addEventListener("click", () => {
-        historicoContainer.style.display = "none";
-        chatLog.style.display = "block";
-        btnHistorico.style.display = "inline-block";
-        btnVoltarChat.style.display = "none";
-      });
-
-      promptInput.addEventListener("input", () => {
-        promptInput.style.height = "auto";
-        promptInput.style.height = promptInput.scrollHeight + "px";
-      });
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
+      async function sendChatMessage() {
         const userPrompt = promptInput.value.trim();
         if (!userPrompt) return;
 
-        addMessageToLog("user", userPrompt, true);
-
-        const savedRawHistory = localStorage.getItem(CHAT_HISTORY_KEY);
-        let historyForAPI = [];
-        if (savedRawHistory) {
-          try {
-            const parsedHistory = JSON.parse(savedRawHistory);
-            historyForAPI = parsedHistory.slice(0, -1);
-          } catch (e) {
-            console.error("Erro ao parsear histórico para API", e);
-          }
-        }
-
-        if (historyForAPI.length > 40) historyForAPI = historyForAPI.slice(-40);
+        const userMessageTimestamp = new Date().toISOString();
+        addMessageToLog("user", userPrompt, userMessageTimestamp);
+        // Não chame updateLocalStorageHistory aqui, pois o backend irá persistir.
+        // Se você ainda quiser um "cache" local temporário para a sessão atual,
+        // precisaria replicar a lógica de histórico aqui ou recarregar do backend.
+        // Para simplificar, vou assumir que o frontend confia no backend para o histórico completo.
 
         promptInput.value = "";
         promptInput.style.height = "auto";
@@ -289,42 +253,89 @@
         statusDiv.textContent = "Luna está digitando... 💭";
 
         try {
+          // --- NOVO: Carregar o histórico atual do chatLog para enviar ao backend ---
+          // O backend irá revalidar/reconstruir o histórico completo, mas enviar o que está na tela ajuda
+          // a manter a coerência em caso de pequenos atrasos ou diferenças.
+          // No entanto, para o método que sugeri no server.js (onde ele busca do DB),
+          // o history do frontend não é estritamente necessário para o Gemini, apenas o `sessionId`.
+          // Vou remover a passagem do `history` daqui para simplificar e confiar no backend.
+          // Apenas o `sessionId` e o `prompt` serão enviados.
+
           const response = await fetch(`${backendBaseUrl}/api/generate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt: userPrompt, history: historyForAPI }),
+            // --- MODIFICAÇÃO CHAVE AQUI: Adicionar sessionId ao body ---
+            body: JSON.stringify({ prompt: userPrompt, sessionId: currentSessionId }),
           });
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || `Erro ${response.status}`);
-          addMessageToLog("ai", data.generatedText, true);
+
+          const aiMessageTimestamp = new Date().toISOString();
+          addMessageToLog("ai", data.generatedText, aiMessageTimestamp);
+          // Não chame updateLocalStorageHistory aqui, pois o backend já persistiu.
+
+          // Recarregar o histórico de sessões para que a sessão atual apareça atualizada (msgs count, preview)
+          carregarHistoricoSessoes();
         } catch (error) {
-          addMessageToLog("error", error.message, false);
+          console.error("Erro no chat:", error);
+          addMessageToLog("error", `Puxa, amor, tive um probleminha aqui: ${error.message} 😢`, new Date().toISOString());
         } finally {
           submitButton.disabled = false;
           statusDiv.textContent = "";
           promptInput.focus();
         }
+      }
+
+      // --- EVENT LISTENERS ---
+      promptInput.addEventListener("input", () => {
+        promptInput.style.height = "auto";
+        promptInput.style.height = promptInput.scrollHeight + "px";
       });
+
+      // Novo: Enviar mensagem com Ctrl + Enter
+      promptInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { // metaKey para macOS
+          event.preventDefault(); // Impede a quebra de linha no textarea
+          sendChatMessage();
+        }
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        sendChatMessage();
+      });
+
+      // Novo: Botão "Novo Chat"
+      btnNovoChat.addEventListener('click', () => {
+          if (confirm("Tem certeza que deseja iniciar um novo chat? A conversa atual será salva no histórico.")) {
+              // Limpa o sessionId atual e gera um novo
+              localStorage.removeItem(SESSION_ID_KEY);
+              // Nao precisa limpar CHAT_HISTORY_KEY pois o histórico agora vem do backend
+              currentSessionId = getSessionId(); // Isso irá gerar um novo ID
+              loadChatHistoryFromBackend(currentSessionId); // Inicia um novo chat vazio
+              carregarHistoricoSessoes(); // Atualiza a lista de histórico (a sessão anterior agora está salva)
+              promptInput.focus();
+          }
+      });
+
 
       // --- ROTINAS DE INICIALIZAÇÃO E CICLO DE VIDA ---
-
       window.addEventListener("load", () => {
-        loadChatHistoryFromStorage();
+        currentSessionId = getSessionId();
+        loadChatHistoryFromBackend(currentSessionId);
+        carregarHistoricoSessoes();
 
         fetch(`${backendBaseUrl}/api/log-connection`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ acao: "acesso_inicial_chatbot" }),
-        }).catch(err => console.error("Erro ao registrar log de conexão:", err));
-
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ acao: "acesso_inicial_chatbot", sessionId: currentSessionId }), // Opcional: registrar sessionId
+        }).catch((err) => console.error("Erro ao registrar log de conexão:", err));
         fetch(`${backendBaseUrl}/api/ranking/registrar-acesso-bot`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ botId: "luna-namoradeira", nomeBot: "Luna" }),
-        }).catch(err => console.error("Erro ao registrar acesso para ranking:", err));
+        }).catch((err) => console.error("Erro ao registrar acesso para ranking:", err));
       });
-
-      window.addEventListener("beforeunload", salvarSessaoChat);
-      window.addEventListener("pagehide", salvarSessaoChat);
-      setInterval(salvarSessaoChat, 60000);
     </script>
   </body>
 </html>
