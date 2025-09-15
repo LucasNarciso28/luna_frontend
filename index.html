@@ -124,7 +124,7 @@
         await fetchAndDisplayInitialDateTime();
 
         try {
-          const response = await fetch(`${backendBaseUrl}/api/chat/historicos/${sessionIdToLoad}`);
+          const response = await fetch(`${backendBaseUrl}/api/chat/historicos?sessao=${sessionIdToLoad}`);
           if (!response.ok) {
             addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", new Date().toISOString());
             return;
