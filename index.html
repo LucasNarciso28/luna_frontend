@@ -48,7 +48,7 @@
       const btnNovoChat = document.getElementById("btn-novo-chat"); // Novo botão
 
       // --- CONFIGURAÇÕES ---
-      const backendBaseUrl = "https://luna-botnamoradeiro.onrender.com";
+      const backendBaseUrl = "http://localhost:3001";
       const CHAT_HISTORY_KEY = "luna_chat_history_v004";
       const SESSION_ID_KEY = "luna_session_id";
 
@@ -124,7 +124,7 @@
         await fetchAndDisplayInitialDateTime();
 
         try {
-          const response = await fetch(`${backendBaseUrl}/api/chat/historicos?sessao=${sessionIdToLoad}`);
+          const response = await fetch(`${backendBaseUrl}/api/chat/historicos/${sessionIdToLoad}`);
           if (!response.ok) {
             addMessageToLog("ai", "Oi, meu amor! 🥰 Que bom te ver por aqui! Como você tá hoje?", new Date().toISOString());
             return;
@@ -160,6 +160,7 @@
           const response = await fetch(`${backendBaseUrl}/api/chat/historicos`);
           if (!response.ok) throw new Error(`Erro ${response.status}`);
           const sessoes = await response.json();
+          console.log("Essas são as sessões: ", sessoes)
           listaSessoes.innerHTML = "";
 
           if (sessoes.length === 0) {
